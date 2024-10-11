@@ -1,9 +1,9 @@
-import AuthCheck from '../components/AuthCheck';
+import MovieSearch from '../components/MovieSearch';
 
 export default function Home() {
   return (
     <main>
-      <AuthCheck />
+      <MovieSearch />
     </main>
   );
 }
