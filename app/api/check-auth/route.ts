@@ -1,12 +1,11 @@
-// pages/api/check-auth.ts
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse } from 'next/server';
 
 const TMDB_API_URL = 'https://api.themoviedb.org/3/movie/11';
 const TMDB_ACCESS_TOKEN = process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export async function GET() {
   if (!TMDB_ACCESS_TOKEN) {
-    return res.status(500).json({ message: 'TMDB Access Token is not configured' });
+    return NextResponse.json({ message: 'TMDB Access Token is not configured' }, { status: 500 });
   }
 
   try {
@@ -18,12 +17,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (response.ok) {
-      res.status(200).json({ message: 'Authentication successful' });
+      return NextResponse.json({ message: 'Authentication successful' });
     } else {
       const errorData = await response.json();
-      res.status(response.status).json({ message: errorData.status_message || 'Authentication failed' });
+      return NextResponse.json({ message: errorData.status_message || 'Authentication failed' }, { status: response.status });
     }
-  } catch (error) {
-    res.status(500).json({ message: 'An error occurred while checking authentication' });
+  } catch (error: unknown) {
+    console.error('Error checking authentication:', error);
+    return NextResponse.json({ message: 'An error occurred while checking authentication' }, { status: 500 });
   }
 }
