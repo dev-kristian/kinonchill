@@ -2,7 +2,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 const TMDB_API_URL = 'https://api.themoviedb.org/3/movie/11';
-const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
+const TMDB_ACCESS_TOKEN = process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (!TMDB_ACCESS_TOKEN) {
