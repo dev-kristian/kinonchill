@@ -4,8 +4,6 @@ import MoviePoster from './MoviePoster';
 import Spinner from './Spinner';
 import { useTrending } from '@/context/TrendingContext';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import MediaDetailsModal from './MediaDetailsModal';
-import { MediaItem, MediaType } from '@/types/media';
 
 const TrendingSection: React.FC = () => {
   const { trendingState, mediaType, timeWindow, setMediaType, setTimeWindow, fetchTrending } = useTrending();
@@ -17,7 +15,6 @@ const TrendingSection: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
-  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
 
   useEffect(() => {
     if (!initialFetchRef.current && data.length === 0 && !isLoading && hasMore) {
@@ -71,10 +68,6 @@ const TrendingSection: React.FC = () => {
     containerRef.current!.scrollLeft = scrollLeft - walk;
   };
 
-  const handlePosterClick = (media: MediaItem) => {
-    setSelectedMedia(media);
-  };
-
   if (error) {
     return <p className="text-destructive text-center">{error}</p>;
   }
@@ -114,9 +107,9 @@ const TrendingSection: React.FC = () => {
           className="flex space-x-4" 
           style={{ minWidth: 'max-content' }}
         >
-          {data.map((item: MediaItem) => (
+          {data.map((item) => (
             <div key={item.id} className="flex-none w-48">
-              <MoviePoster media={item} onClick={() => handlePosterClick(item)} />
+              <MoviePoster movie={item} />
             </div>
           ))}
           {isLoading && (
@@ -126,14 +119,6 @@ const TrendingSection: React.FC = () => {
           )}
         </motion.div>
       </div>
-      {selectedMedia && (
-        <MediaDetailsModal
-          isOpen={!!selectedMedia}
-          onClose={() => setSelectedMedia(null)}
-          mediaType={selectedMedia.media_type}
-          mediaId={selectedMedia.id}
-        />
-      )}
     </div>
   );
 };

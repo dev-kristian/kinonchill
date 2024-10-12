@@ -5,22 +5,32 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useAuthContext } from '@/context/AuthContext';
 import { useUserData } from '@/context/UserDataContext';
 import { Alert, AlertTitle } from '@/components/ui/alert';
-import { MediaItem } from '@/types/media';
 
-interface MoviePosterProps {
-  media: MediaItem;
-  showMediaType?: boolean;
-  onClick?: () => void;
+interface Movie {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path?: string | null;
+  profile_path?: string | null;
+  vote_average: number;
+  media_type?: string;
+  release_date?: string;
+  first_air_date?: string;
 }
 
-const MoviePoster: React.FC<MoviePosterProps> = ({ media, showMediaType = false, onClick }) => {
+interface MoviePosterProps {
+  movie: Movie;
+  showMediaType?: boolean;
+}
+
+const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false }) => {
   const { user } = useAuthContext();
   const { userData, isLoading: isUserDataLoading, addWatchedMovie, removeWatchedMovie } = useUserData();
   const [isLoading, setIsLoading] = React.useState(false);
   const [showAlert, setShowAlert] = React.useState(false);
   const [alertMessage, setAlertMessage] = React.useState('');
 
-  const isWatched = userData?.watchedMovies[media.id.toString()] || false;
+  const isWatched = userData?.watchedMovies[movie.id.toString()] || false;
 
   React.useEffect(() => {
     if (showAlert) {
@@ -32,8 +42,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ media, showMediaType = false,
     }
   }, [showAlert]);
 
-  const handleToggleWatched = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering onClick
+  const handleToggleWatched = async () => {
     if (!user) {
       setAlertMessage('Please log in to mark movies as watched.');
       setShowAlert(true);
@@ -43,10 +52,10 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ media, showMediaType = false,
     setIsLoading(true);
     try {
       if (isWatched) {
-        await removeWatchedMovie(media.id);
+        await removeWatchedMovie(movie.id);
         setAlertMessage('Movie removed from watched list.');
       } else {
-        await addWatchedMovie(media.id);
+        await addWatchedMovie(movie.id);
         setAlertMessage('Movie marked as watched successfully!');
       }
     } catch (error) {
@@ -58,9 +67,9 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ media, showMediaType = false,
     }
   };
 
-  const title = media.title || media.name || 'Untitled';
-  const imagePath = media.poster_path || media.profile_path;
-  const releaseDate = media.release_date || media.first_air_date;
+  const title = movie.title || movie.name || 'Untitled';
+  const imagePath = movie.poster_path || movie.profile_path;
+  const releaseDate = movie.release_date || movie.first_air_date;
 
   const getScoreColor = (score: number) => {
     if (score >= 7) return 'text-green-500 border-green-500';
@@ -68,14 +77,12 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ media, showMediaType = false,
     return 'text-red-500 border-red-500';
   };
 
-  const getBadgeColor = (mediaType: string) => {
-    switch (mediaType) {
+  const getBadgeColor = () => {
+    switch (movie.media_type) {
       case 'movie':
         return 'bg-blue-500';
       case 'tv':
         return 'bg-green-500';
-      case 'person':
-        return 'bg-purple-500';
       default:
         return 'bg-gray-500';
     }
@@ -83,10 +90,9 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ media, showMediaType = false,
 
   return (
     <motion.div 
-      className="relative rounded-lg overflow-hidden shadow-lg bg-background-light cursor-pointer"
+      className="relative rounded-lg overflow-hidden shadow-lg bg-background-light"
       whileHover={{ scale: 1.05 }}
       transition={{ duration: 0.3 }}
-      onClick={onClick}
     >
       {imagePath ? (
         <>
@@ -132,19 +138,19 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ media, showMediaType = false,
         </TooltipProvider>
       </div>
       <div className="absolute top-2 left-2 z-10">
-        <div className={`w-10 h-10 rounded-full border-2 ${getScoreColor(media.vote_average)} flex items-center justify-center bg-background/50`}>
-          <span className="text-sm font-bold">{media.vote_average.toFixed(1)}</span>
+        <div className={`w-10 h-10 rounded-full border-2 ${getScoreColor(movie.vote_average)} flex items-center justify-center bg-background/50`}>
+          <span className="text-sm font-bold">{movie.vote_average.toFixed(1)}</span>
         </div>
       </div>
       <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
         <h2 className="text-lg font-semibold text-white mb-1">{title}</h2>
         <div className="flex justify-between items-center">
-          {showMediaType && media.media_type && (
-            <span className={`text-xs font-medium py-1 px-2 rounded ${getBadgeColor(media.media_type)}`}>
-              {media.media_type}
+          {showMediaType && movie.media_type && (
+            <span className={`text-xs font-medium py-1 px-2 rounded ${getBadgeColor()}`}>
+              {movie.media_type}
             </span>
           )}
-          {releaseDate && (
+          {showMediaType && releaseDate && (
             <span className="text-muted-foreground text-sm text-white">
               {new Date(releaseDate).getFullYear()}
             </span>
