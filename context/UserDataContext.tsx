@@ -3,17 +3,41 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuthContext } from './AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, doc, setDoc, onSnapshot, updateDoc, deleteField } from 'firebase/firestore';
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  onSnapshot, 
+  updateDoc, 
+  deleteField, 
+  getDoc, 
+  serverTimestamp, 
+  Timestamp 
+} from 'firebase/firestore';
 
 interface UserData {
-  watchedMovies: { [movieId: string]: boolean };
+  watchlist: {
+    movie: { [movieId: string]: boolean };
+    tv: { [tvId: string]: boolean };
+  };
+}
+
+interface MovieTVDetails {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path?: string | null;
+  release_date?: string;
+  first_air_date?: string;
+  vote_average: number;
+  // Remove the last_updated field from here
 }
 
 interface UserDataContextType {
   userData: UserData | null;
   isLoading: boolean;
-  addWatchedMovie: (movieId: number) => Promise<void>;
-  removeWatchedMovie: (movieId: number) => Promise<void>;
+  addToWatchlist: (item: MovieTVDetails, mediaType: 'movie' | 'tv') => Promise<void>;
+  removeFromWatchlist: (id: number, mediaType: 'movie' | 'tv') => Promise<void>;
 }
 
 const UserDataContext = createContext<UserDataContextType | undefined>(undefined);
@@ -38,12 +62,12 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
-    const watchedMoviesDocRef = doc(db, 'users', user.uid, 'userMovieData', 'watchedMovies');
-    const unsubscribe = onSnapshot(watchedMoviesDocRef, (docSnapshot) => {
+    const watchlistDocRef = doc(db, 'users', user.uid, 'userMovieData', 'watchlist');
+    const unsubscribe = onSnapshot(watchlistDocRef, (docSnapshot) => {
       if (docSnapshot.exists()) {
         setUserData(docSnapshot.data() as UserData);
       } else {
-        setUserData({ watchedMovies: {} });
+        setUserData({ watchlist: { movie: {}, tv: {} } });
       }
       setIsLoading(false);
     });
@@ -51,34 +75,74 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => unsubscribe();
   }, [user]);
 
-  const addWatchedMovie = async (movieId: number) => {
+  const addToWatchlist = async (item: MovieTVDetails, mediaType: 'movie' | 'tv') => {
     if (!user || !userData) return;
 
-    const watchedMoviesDocRef = doc(db, 'users', user.uid, 'userMovieData', 'watchedMovies');
-    await setDoc(watchedMoviesDocRef, {
-      watchedMovies: { ...userData.watchedMovies, [movieId.toString()]: true }
-    }, { merge: true });
+    const watchlistDocRef = doc(db, 'users', user.uid, 'userMovieData', 'watchlist');
+    const itemCollectionRef = collection(db, mediaType === 'movie' ? 'movies' : 'tvShows');
+    const itemDocRef = doc(itemCollectionRef, item.id.toString());
+
+    try {
+      // Add to user's watchlist
+      await setDoc(watchlistDocRef, {
+        watchlist: {
+          ...userData.watchlist,
+          [mediaType]: {
+            ...userData.watchlist[mediaType],
+            [item.id.toString()]: true
+          }
+        }
+      }, { merge: true });
+
+      // Check if the item already exists in the collection
+      const itemDoc = await getDoc(itemDocRef);
+      const now = Timestamp.now();
+      
+      if (!itemDoc.exists()) {
+        // If it doesn't exist, add it to the collection
+        await setDoc(itemDocRef, {
+          ...item,
+          last_updated: serverTimestamp(),
+        });
+      } else {
+        // If it exists, check if it needs to be updated
+        const data = itemDoc.data();
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        if (data.last_updated.toDate() < oneWeekAgo) {
+          // If the data is older than a week, update it
+          await updateDoc(itemDocRef, {
+            ...item,
+            last_updated: serverTimestamp(),
+          });
+        }
+      }
+
+      console.log(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} ID ${item.id} added to watchlist and central collection successfully.`);
+    } catch (error) {
+      console.error(`Error adding ${mediaType} to watchlist and central collection:`, error);
+    }
   };
 
-  const removeWatchedMovie = async (movieId: number) => {
+  const removeFromWatchlist = async (id: number, mediaType: 'movie' | 'tv') => {
     if (!user || !userData) return;
   
     try {
-      const watchedMoviesDocRef = doc(db, 'users', user.uid, 'userMovieData', 'watchedMovies');
+      const watchlistDocRef = doc(db, 'users', user.uid, 'userMovieData', 'watchlist');
   
-      // Use updateDoc to remove the specific movieId from the watchedMovies map
-      await updateDoc(watchedMoviesDocRef, {
-        [`watchedMovies.${movieId.toString()}`]: deleteField()
+      await updateDoc(watchlistDocRef, {
+        [`watchlist.${mediaType}.${id.toString()}`]: deleteField()
       });
   
-      console.log(`Movie ID ${movieId} removed successfully.`);
+      console.log(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} ID ${id} removed from watchlist successfully.`);
     } catch (error) {
-      console.error('Error removing movie from watchedMovies:', error);
+      console.error(`Error removing ${mediaType} from watchlist:`, error);
     }
   };
 
   return (
-    <UserDataContext.Provider value={{ userData, isLoading, addWatchedMovie, removeWatchedMovie }}>
+    <UserDataContext.Provider value={{ userData, isLoading, addToWatchlist, removeFromWatchlist }}>
       {children}
     </UserDataContext.Provider>
   );
