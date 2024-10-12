@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 
 interface Media {
   id: number;
@@ -39,32 +39,28 @@ export const useTrending = () => {
 };
 
 export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Cache to store data for different mediaType and timeWindow combinations
   const [mediaType, setMediaType] = useState<'movie' | 'tv'>('movie');
   const [timeWindow, setTimeWindow] = useState<'day' | 'week'>('day');
-
   const cache = useRef<Record<string, TrendingState>>({});
 
   const getCacheKey = (type: 'movie' | 'tv', window: 'day' | 'week') => `${type}-${window}`;
 
-  const [trendingState, setTrendingState] = useState<TrendingState>(
-    cache.current[getCacheKey(mediaType, timeWindow)] || {
-      data: [],
-      page: 0,
-      isLoading: false,
-      error: null,
-      hasMore: true,
-    }
-  );
+  const [trendingState, setTrendingState] = useState<TrendingState>({
+    data: [],
+    page: 0,
+    isLoading: false,
+    error: null,
+    hasMore: true,
+  });
 
-  const fetchTrending = useCallback(async () => {
+  const fetchTrending = useCallback(async (resetPage: boolean = false) => {
     const cacheKey = getCacheKey(mediaType, timeWindow);
 
-    if (trendingState.isLoading || !trendingState.hasMore) return;
+    if (trendingState.isLoading || (!resetPage && !trendingState.hasMore)) return;
 
     setTrendingState(prev => ({ ...prev, isLoading: true, error: null }));
 
-    const nextPage = trendingState.page + 1;
+    const nextPage = resetPage ? 1 : trendingState.page + 1;
 
     try {
       const response = await fetch(`/api/trending?mediaType=${mediaType}&timeWindow=${timeWindow}&page=${nextPage}`);
@@ -74,7 +70,7 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const data = await response.json();
 
       const newState = {
-        data: [...trendingState.data, ...data.results],
+        data: resetPage ? data.results : [...trendingState.data, ...data.results],
         page: nextPage,
         isLoading: false,
         error: null,
@@ -82,7 +78,7 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
 
       setTrendingState(newState);
-      cache.current[cacheKey] = newState; // Save fetched data in cache
+      cache.current[cacheKey] = newState;
 
     } catch (error) {
       console.error(`Error fetching trending ${mediaType}:`, error);
@@ -94,37 +90,47 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [mediaType, timeWindow, trendingState]);
 
-  const handleSetMediaType = (type: 'movie' | 'tv') => {
+  const handleSetMediaType = useCallback((type: 'movie' | 'tv') => {
     if (type !== mediaType) {
-      const cacheKey = getCacheKey(type, timeWindow);
       setMediaType(type);
-      
-      // Load state from cache or reset if not cached
-      setTrendingState(cache.current[cacheKey] || {
-        data: [],
-        page: 0,
-        isLoading: false,
-        error: null,
-        hasMore: true,
-      });
+      const cacheKey = getCacheKey(type, timeWindow);
+      if (cache.current[cacheKey]) {
+        setTrendingState(cache.current[cacheKey]);
+      } else {
+        setTrendingState({
+          data: [],
+          page: 0,
+          isLoading: false,
+          error: null,
+          hasMore: true,
+        });
+      }
     }
-  };
+  }, [mediaType, timeWindow]);
 
-  const handleSetTimeWindow = (window: 'day' | 'week') => {
+  const handleSetTimeWindow = useCallback((window: 'day' | 'week') => {
     if (window !== timeWindow) {
-      const cacheKey = getCacheKey(mediaType, window);
       setTimeWindow(window);
-
-      // Load state from cache or reset if not cached
-      setTrendingState(cache.current[cacheKey] || {
-        data: [],
-        page: 0,
-        isLoading: false,
-        error: null,
-        hasMore: true,
-      });
+      const cacheKey = getCacheKey(mediaType, window);
+      if (cache.current[cacheKey]) {
+        setTrendingState(cache.current[cacheKey]);
+      } else {
+        setTrendingState({
+          data: [],
+          page: 0,
+          isLoading: false,
+          error: null,
+          hasMore: true,
+        });
+      }
     }
-  };
+  }, [mediaType, timeWindow]);
+
+  useEffect(() => {
+    if (trendingState.data.length === 0 && trendingState.hasMore) {
+      fetchTrending(true);
+    }
+  }, [mediaType, timeWindow, trendingState.data.length, trendingState.hasMore, fetchTrending]);
 
   return (
     <TrendingContext.Provider 
@@ -134,7 +140,7 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         timeWindow, 
         setMediaType: handleSetMediaType, 
         setTimeWindow: handleSetTimeWindow, 
-        fetchTrending 
+        fetchTrending: () => fetchTrending(false)
       }}
     >
       {children}
