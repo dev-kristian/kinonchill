@@ -42,6 +42,7 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [mediaType, setMediaType] = useState<'movie' | 'tv'>('movie');
   const [timeWindow, setTimeWindow] = useState<'day' | 'week'>('day');
   const cache = useRef<Record<string, TrendingState>>({});
+  const initialFetchMade = useRef(false);
 
   const getCacheKey = (type: 'movie' | 'tv', window: 'day' | 'week') => `${type}-${window}`;
 
@@ -104,6 +105,7 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           error: null,
           hasMore: true,
         });
+        initialFetchMade.current = false;
       }
     }
   }, [mediaType, timeWindow]);
@@ -122,15 +124,17 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           error: null,
           hasMore: true,
         });
+        initialFetchMade.current = false;
       }
     }
   }, [mediaType, timeWindow]);
 
   useEffect(() => {
-    if (trendingState.data.length === 0 && trendingState.hasMore) {
+    if (!initialFetchMade.current && trendingState.data.length === 0 && trendingState.hasMore) {
+      initialFetchMade.current = true;
       fetchTrending(true);
     }
-  }, [mediaType, timeWindow, trendingState.data.length, trendingState.hasMore, fetchTrending]);
+  }, [trendingState.data.length, trendingState.hasMore, fetchTrending]);
 
   return (
     <TrendingContext.Provider 

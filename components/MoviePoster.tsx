@@ -1,11 +1,10 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuthContext } from '@/context/AuthContext';
 import { useUserData } from '@/context/UserDataContext';
 import { Alert, AlertTitle } from '@/components/ui/alert';
-import { Timestamp } from 'firebase/firestore';
+
 interface Movie {
   id: number;
   title?: string;

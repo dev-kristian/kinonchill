@@ -8,20 +8,12 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const TrendingSection: React.FC = () => {
   const { trendingState, mediaType, timeWindow, setMediaType, setTimeWindow, fetchTrending } = useTrending();
   const containerRef = useRef<HTMLDivElement>(null);
-  const initialFetchRef = useRef(false);
   
   const { data, isLoading, error, hasMore } = trendingState;
 
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
-
-  useEffect(() => {
-    if (!initialFetchRef.current && data.length === 0 && !isLoading && hasMore) {
-      fetchTrending();
-      initialFetchRef.current = true;
-    }
-  }, [data.length, isLoading, hasMore, fetchTrending]);
 
   const handleScroll = useCallback(() => {
     if (containerRef.current) {
