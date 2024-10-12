@@ -1,17 +1,21 @@
-//app/api/search/route.ts
 import { NextResponse } from 'next/server'
 
 const TMDB_API_KEY = process.env.NEXT_PRIVATE_TMDB_API_KEY
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const query = searchParams.get('query')
+  const mediaType = searchParams.get('mediaType')
+  const id = searchParams.get('id')
 
-  if (!query) {
-    return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 })
+  if (!mediaType || !['movie', 'tv', 'person'].includes(mediaType)) {
+    return NextResponse.json({ error: 'Invalid mediaType parameter' }, { status: 400 })
   }
 
-  const url = `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(query)}&include_adult=false&language=en-US&page=1`
+  if (!id) {
+    return NextResponse.json({ error: 'Missing id parameter' }, { status: 400 })
+  }
+
+  const url = `https://api.themoviedb.org/3/${mediaType}/${id}?language=en-US`
 
   try {
     const response = await fetch(url, {
@@ -22,13 +26,13 @@ export async function GET(request: Request) {
     })
 
     if (!response.ok) {
-      throw new Error('Failed to fetch data from TMDB')
+      throw new Error(`Failed to fetch ${mediaType} details from TMDB`)
     }
 
     const data = await response.json()
     return NextResponse.json(data)
   } catch (error) {
-    console.error('Error fetching from TMDB:', error)
+    console.error(`Error fetching ${mediaType} details from TMDB:`, error)
     return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 })
   }
 }

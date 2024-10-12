@@ -6,11 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Spinner from '@/components/Spinner';
 import { useSearch } from '@/context/SearchContext';
+import TrendingSection from '@/components/TrendingSection';
+import MediaDetailsModal from '@/components/MediaDetailsModal';
+import { MediaItem } from '@/types/media';
 
 export default function Explore() {
   const [searchQuery, setSearchQuery] = useState('');
   const { searchState, setSearchResults, setIsLoading, setError, clearSearch } = useSearch();
   const { results, isLoading, error } = searchState;
+  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,23 +38,31 @@ export default function Explore() {
     }
   };
 
+  const handlePosterClick = (media: MediaItem) => {
+    setSelectedMedia(media);
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto">
       <motion.h1 
         className="text-4xl font-bold mb-8 text-primary"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        Explore Movies
+        Explore Movies and TV Shows
       </motion.h1>
+
+      <TrendingSection />
+
+      <h2 className="text-2xl font-bold mb-4">Search</h2>
       <form onSubmit={handleSearch} className="mb-8">
         <div className="flex gap-2">
           <Input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for movies..."
+            placeholder="Search for movies or TV shows..."
             className="flex-grow"
           />
           <Button type="submit" disabled={isLoading}>
@@ -85,15 +97,16 @@ export default function Explore() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            {results.map((movie) => (
+            {results.map((media: MediaItem) => (
               <motion.div
-                key={movie.id}
+                key={media.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.3 }}
+                onClick={() => handlePosterClick(media)}
               >
-                <MoviePoster movie={movie} />
+                <MoviePoster media={media} />
               </motion.div>
             ))}
           </motion.div>
@@ -109,6 +122,15 @@ export default function Explore() {
           </motion.p>
         ) : null}
       </AnimatePresence>
+
+      {selectedMedia && (
+        <MediaDetailsModal
+          isOpen={!!selectedMedia}
+          onClose={() => setSelectedMedia(null)}
+          mediaType={selectedMedia.media_type}
+          mediaId={selectedMedia.id}
+        />
+      )}
     </div>
   );
 }

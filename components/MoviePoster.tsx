@@ -1,37 +1,28 @@
-'use client'
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuthContext } from '@/context/AuthContext';
 import { useUserData } from '@/context/UserDataContext';
 import { Alert, AlertTitle } from '@/components/ui/alert';
-import { motion } from 'framer-motion';
-
-interface Movie {
-  id: number;
-  title?: string;
-  name?: string;
-  poster_path?: string | null;
-  profile_path?: string | null;
-  media_type: string;
-  release_date?: string;
-  first_air_date?: string;
-}
+import { MediaItem } from '@/types/media';
 
 interface MoviePosterProps {
-  movie: Movie;
+  media: MediaItem;
+  showMediaType?: boolean;
+  onClick?: () => void;
 }
 
-const MoviePoster: React.FC<MoviePosterProps> = ({ movie }) => {
+const MoviePoster: React.FC<MoviePosterProps> = ({ media, showMediaType = false, onClick }) => {
   const { user } = useAuthContext();
   const { userData, isLoading: isUserDataLoading, addWatchedMovie, removeWatchedMovie } = useUserData();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [showAlert, setShowAlert] = React.useState(false);
+  const [alertMessage, setAlertMessage] = React.useState('');
 
-  const isWatched = userData?.watchedMovies[movie.id.toString()] || false;
+  const isWatched = userData?.watchedMovies[media.id.toString()] || false;
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (showAlert) {
       const timer = setTimeout(() => {
         setShowAlert(false);
@@ -41,7 +32,8 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie }) => {
     }
   }, [showAlert]);
 
-  const handleToggleWatched = async () => {
+  const handleToggleWatched = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering onClick
     if (!user) {
       setAlertMessage('Please log in to mark movies as watched.');
       setShowAlert(true);
@@ -51,10 +43,10 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie }) => {
     setIsLoading(true);
     try {
       if (isWatched) {
-        await removeWatchedMovie(movie.id);
+        await removeWatchedMovie(media.id);
         setAlertMessage('Movie removed from watched list.');
       } else {
-        await addWatchedMovie(movie.id);
+        await addWatchedMovie(media.id);
         setAlertMessage('Movie marked as watched successfully!');
       }
     } catch (error) {
@@ -66,22 +58,24 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie }) => {
     }
   };
 
-  // Determine the correct title and release date fields based on media type
-  const title = movie.media_type === 'movie' || movie.media_type === 'tv' ? movie.title || movie.name : movie.name;
-  const releaseDate = movie.media_type === 'movie' ? movie.release_date : movie.first_air_date;
+  const title = media.title || media.name || 'Untitled';
+  const imagePath = media.poster_path || media.profile_path;
+  const releaseDate = media.release_date || media.first_air_date;
 
-  // Determine the correct image path
-  const imagePath = movie.media_type === 'person' ? movie.profile_path : movie.poster_path;
+  const getScoreColor = (score: number) => {
+    if (score >= 7) return 'text-green-500 border-green-500';
+    if (score >= 5) return 'text-yellow-500 border-yellow-500';
+    return 'text-red-500 border-red-500';
+  };
 
-  // Determine color coding based on media type
-  const getBadgeColor = () => {
-    switch (movie.media_type) {
+  const getBadgeColor = (mediaType: string) => {
+    switch (mediaType) {
       case 'movie':
         return 'bg-blue-500';
       case 'tv':
         return 'bg-green-500';
       case 'person':
-        return 'bg-red-500';
+        return 'bg-purple-500';
       default:
         return 'bg-gray-500';
     }
@@ -89,15 +83,16 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie }) => {
 
   return (
     <motion.div 
-      className="relative rounded-lg overflow-hidden shadow-lg bg-background-light"
+      className="relative rounded-lg overflow-hidden shadow-lg bg-background-light cursor-pointer"
       whileHover={{ scale: 1.05 }}
       transition={{ duration: 0.3 }}
+      onClick={onClick}
     >
       {imagePath ? (
         <>
           <Image
             src={`https://image.tmdb.org/t/p/w500${imagePath}`}
-            alt={title || 'Untitled'}
+            alt={title}
             width={500}
             height={750}
             className="w-full h-auto object-cover rounded-t-lg"
@@ -123,7 +118,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie }) => {
                 whileTap={{ scale: 0.9 }}
               >
                 <img
-                  src="/icons/eye.svg" // Path to your SVG in the public folder
+                  src="/icons/eye.svg"
                   alt="eye icon"
                   width={24}
                   height={24}
@@ -136,11 +131,24 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie }) => {
           </Tooltip>
         </TooltipProvider>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-transparent to-transparent">
-        <h2 className="text-lg font-semibold text-white mb-2 truncate">{title}</h2>
+      <div className="absolute top-2 left-2 z-10">
+        <div className={`w-10 h-10 rounded-full border-2 ${getScoreColor(media.vote_average)} flex items-center justify-center bg-background/50`}>
+          <span className="text-sm font-bold">{media.vote_average.toFixed(1)}</span>
+        </div>
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
+        <h2 className="text-lg font-semibold text-white mb-1">{title}</h2>
         <div className="flex justify-between items-center">
-          <span className={`text-xs font-medium py-1 px-2 rounded ${getBadgeColor()}`}>{movie.media_type}</span>
-          {releaseDate && <span className="text-muted-foreground text-sm text-white">{releaseDate}</span>}
+          {showMediaType && media.media_type && (
+            <span className={`text-xs font-medium py-1 px-2 rounded ${getBadgeColor(media.media_type)}`}>
+              {media.media_type}
+            </span>
+          )}
+          {releaseDate && (
+            <span className="text-muted-foreground text-sm text-white">
+              {new Date(releaseDate).getFullYear()}
+            </span>
+          )}
         </div>
       </div>
       {showAlert && (

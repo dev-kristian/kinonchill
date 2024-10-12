@@ -62,4 +62,13 @@ input, textarea {
   body {
     @apply bg-background text-foreground;
   }
+  .disable-selection {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+  .scroll-container {
+    scroll-behavior: smooth;
+  }
 }
