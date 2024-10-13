@@ -4,17 +4,11 @@ import { motion } from 'framer-motion';
 import { useAuthContext } from '@/context/AuthContext';
 import { useUserData } from '@/context/UserDataContext';
 import { Alert, AlertTitle } from '@/components/ui/alert';
+import { Movie } from '@/types/types'; // Import the Movie interface
 
-interface Movie {
-  id: number;
-  title?: string;
-  name?: string;
-  poster_path?: string | null;
-  profile_path?: string | null;
-  vote_average: number;
-  media_type?: string;
-  release_date?: string;
-  first_air_date?: string;
+interface MoviePosterProps {
+  movie: Movie;
+  showMediaType?: boolean;
 }
 
 interface MoviePosterProps {
@@ -48,7 +42,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
       setShowAlert(true);
       return;
     }
-
+  
     setIsLoading(true);
     try {
       if (isInWatchlist) {
@@ -58,11 +52,11 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
         // Create a new object with the required fields, omitting 'last_updated'
         const movieDetails = {
           id: movie.id,
-          title: movie.title || movie.name,
-          poster_path: movie.poster_path,
-          release_date: movie.release_date || movie.first_air_date,
-          vote_average: movie.vote_average,
-          // Add any other fields you want to store
+          title: movie.title || movie.name || 'Unknown Title',
+          poster_path: movie.poster_path || null,
+          release_date: movie.release_date || movie.first_air_date || '',
+          vote_average: movie.vote_average || 0,
+          media_type: mediaType,
         };
         await addToWatchlist(movieDetails, mediaType);
         setAlertMessage(`${mediaType === 'movie' ? 'Movie' : 'TV Show'} added to watchlist successfully!`);
@@ -80,7 +74,8 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
   const imagePath = movie.poster_path || movie.profile_path;
   const releaseDate = movie.release_date || movie.first_air_date;
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score: number | undefined) => {
+    if (score === undefined) return 'text-gray-500 border-gray-500';
     if (score >= 7) return 'text-green-500 border-green-500';
     if (score >= 5) return 'text-yellow-500 border-yellow-500';
     return 'text-red-500 border-red-500';
@@ -140,7 +135,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
       </div>
       <div className="absolute top-2 left-2 z-10">
         <div className={`w-10 h-10 rounded-full border-2 ${getScoreColor(movie.vote_average)} flex items-center justify-center bg-background/50`}>
-          <span className="text-sm font-bold">{movie.vote_average.toFixed(1)}</span>
+          <span className="text-sm font-bold">{movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</span>
         </div>
       </div>
       <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
