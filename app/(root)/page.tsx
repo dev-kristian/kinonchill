@@ -1,11 +1,15 @@
 // app/(root)/page.tsx
+import React from 'react';
 import PopularItems from '@/components/PopularItems';
+import AnimatedTitle from '@/components/AnimatedTitle';
 
 export default function Home() {
   return (
-    <main className="flex flex-col items-center justify-start p-24">
-      <h2 className="text-2xl font-bold mb-4">Popular on Everyone&apos;s Watchlist</h2>
+    <div className="container mx-auto">
+      <AnimatedTitle>
+        Popular Movies and TV Shows
+      </AnimatedTitle>
       <PopularItems />
-    </main>
+    </div>
   )
 }
