@@ -1,12 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 const TMDB_API_KEY = process.env.NEXT_PRIVATE_TMDB_API_KEY
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const mediaType = searchParams.get('mediaType')
-  const timeWindow = searchParams.get('timeWindow')
-  const page = searchParams.get('page') || '1'
+export async function POST(request: NextRequest) {
+  const { mediaType, timeWindow, page } = await request.json()
 
   if (!mediaType || (mediaType !== 'movie' && mediaType !== 'tv')) {
     return NextResponse.json({ error: 'Invalid mediaType parameter' }, { status: 400 })

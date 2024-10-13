@@ -64,7 +64,18 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const nextPage = resetPage ? 1 : trendingState.page + 1;
 
     try {
-      const response = await fetch(`/api/trending?mediaType=${mediaType}&timeWindow=${timeWindow}&page=${nextPage}`);
+      const response = await fetch(`/api/trending`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mediaType,
+          timeWindow,
+          page: nextPage,
+        }),
+      });
+
       if (!response.ok) {
         throw new Error(`Failed to fetch trending ${mediaType}`);
       }

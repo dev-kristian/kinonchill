@@ -22,7 +22,7 @@ export default function SignIn() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      router.push('/'); // Redirect to home page after successful sign-in
+      router.push('/');
     } catch (error) {
       setError('Failed to sign in. Please try again.');
       console.error('Error signing in with Google:', error);
