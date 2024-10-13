@@ -1,7 +1,7 @@
 
 'use client'
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
+import { collection, query, limit, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import MoviePoster from './MoviePoster';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -123,7 +123,6 @@ const PopularItems: React.FC = () => {
               <MoviePoster movie={item} />
               <div className="mt-2 text-sm text-center">
                 <div><span className="font-bold">{item.watchlist_count}</span> watchlists</div>
-                <div>Rating: <span className="font-bold">{item.vote_average.toFixed(1)}</span></div>
               </div>
             </div>
           ))}
