@@ -119,7 +119,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
           <span className="text-foreground text-lg">No Image Available</span>
         </div>
       )}
-     <div className="absolute top-2 right-2 z-10">
+      <div className="absolute top-2 right-2 z-10">
         <motion.button
           onClick={handleToggleWatchlist}
           disabled={isLoading || isUserDataLoading}
@@ -129,7 +129,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
         >
-          <img
+          <Image
             src="/icons/watchlist.svg"
             alt="eye icon"
             width={24}

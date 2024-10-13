@@ -48,7 +48,6 @@ export default function Explore() {
           Explore Movies and TV Shows
         </motion.h1>
 
-        <TrendingSection />
 
         <h2 className="text-2xl font-bold mb-4">Search</h2>
         <form onSubmit={handleSearch} className="mb-8">
@@ -116,6 +115,8 @@ export default function Explore() {
             </motion.p>
           ) : null}
         </AnimatePresence>
+        <TrendingSection />
+
       </div>
   );
 }
