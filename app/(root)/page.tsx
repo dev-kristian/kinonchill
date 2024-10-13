@@ -1,6 +1,6 @@
 // app/(root)/page.tsx
 import React from 'react';
-import PopularItems from '@/components/PopularItems';
+import PopularItems from '@/components/PopularSection';
 import AnimatedTitle from '@/components/AnimatedTitle';
 
 export default function Home() {

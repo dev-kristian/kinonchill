@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { usePopular } from './PopularContext';
 
 interface Media {
   id: number;
@@ -9,6 +10,7 @@ interface Media {
   release_date?: string;
   first_air_date?: string;
   vote_average: number;
+  watchlist_count?: number;
 }
 
 interface TrendingState {
@@ -54,6 +56,8 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     hasMore: true,
   });
 
+  const { getWatchlistCount } = usePopular();
+
   const fetchTrending = useCallback(async (resetPage: boolean = false) => {
     const cacheKey = getCacheKey(mediaType, timeWindow);
 
@@ -81,8 +85,16 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       const data = await response.json();
 
+      // Fetch watchlist counts for each item
+      const resultsWithWatchlistCounts = await Promise.all(
+        data.results.map(async (item: Media) => {
+          const watchlist_count = await getWatchlistCount(item.id, item.media_type);
+          return { ...item, watchlist_count };
+        })
+      );
+
       const newState = {
-        data: resetPage ? data.results : [...trendingState.data, ...data.results],
+        data: resetPage ? resultsWithWatchlistCounts : [...trendingState.data, ...resultsWithWatchlistCounts],
         page: nextPage,
         isLoading: false,
         error: null,
@@ -100,7 +112,7 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isLoading: false,
       }));
     }
-  }, [mediaType, timeWindow, trendingState]);
+  }, [mediaType, timeWindow, trendingState, getWatchlistCount]);
 
   const handleSetMediaType = useCallback((type: 'movie' | 'tv') => {
     if (type !== mediaType) {
