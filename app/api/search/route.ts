@@ -1,7 +1,10 @@
-//app/api/search/route.ts
+// app/api/search/route.ts
+
 import { NextResponse } from 'next/server'
 
 const TMDB_API_KEY = process.env.NEXT_PRIVATE_TMDB_API_KEY
+
+export const runtime = 'edge'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)

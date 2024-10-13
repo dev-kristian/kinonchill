@@ -7,7 +7,7 @@
     --background: 240 10% 3.9%;
     --background-light: 240 10% 5.9%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
+    --card: 240 10% 10%;
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
@@ -31,44 +31,20 @@
     --chart-3: 230 70% 50%;
     --chart-4: 180 60% 45%;
     --chart-5: 30 80% 55%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
-}
 
-body {
-  @apply bg-background text-foreground;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  @apply text-foreground;
-}
-
-a {
-  @apply text-primary hover:text-primary-hover transition-colors duration-200;
-}
-
-button {
-  @apply transition-colors duration-200;
-}
-
-input, textarea {
-  @apply bg-background-light text-foreground border-secondary focus:border-primary outline-none transition-colors duration-200;
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  .disable-selection {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-  }
   .scroll-container {
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: row;
+    scroll-snap-type: x mandatory;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .scroll-snap-align {
+    scroll-snap-align: start;
   }
 }

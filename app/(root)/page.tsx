@@ -1,6 +1,6 @@
 // app/(root)/page.tsx
 import React from 'react';
-import PopularItems from '@/components/PopularSection';
+import PopularSection from '@/components/PopularSection';
 import AnimatedTitle from '@/components/AnimatedTitle';
 
 export default function Home() {
@@ -9,7 +9,7 @@ export default function Home() {
       <AnimatedTitle>
         Popular Movies and TV Shows
       </AnimatedTitle>
-      <PopularItems />
+      <PopularSection />
     </div>
   )
 }

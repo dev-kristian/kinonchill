@@ -18,10 +18,12 @@ function RootLayout({
       <SearchProvider>
         <PopularProvider>
           <TrendingProvider>
+          <div className="flex flex-col min-h-screen ">
             <Navigation />
-            <main className="container mx-auto px-4 py-8">
+            <main className="flex-grow ">
               {children}
             </main>
+            </div>
           </TrendingProvider>
         </PopularProvider>
       </SearchProvider>

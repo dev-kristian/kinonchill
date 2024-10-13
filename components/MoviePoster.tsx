@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
 import { useUserData } from '@/context/UserDataContext';
 import { Movie } from '@/types/types';
@@ -10,8 +11,8 @@ interface MoviePosterProps {
   movie: Movie;
   showMediaType?: boolean;
 }
-
 const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false }) => {
+  const router = useRouter();
   const { user } = useAuthContext();
   const { userData, isLoading: isUserDataLoading, addToWatchlist, removeFromWatchlist } = useUserData();
   const [isLoading, setIsLoading] = React.useState(false);
@@ -58,11 +59,16 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
     return 'text-red-400';
   };
 
+  const handleClick = () => {
+    router.push(`/details/${movie.media_type}/${movie.id}`);
+  };
+
   return (
     <motion.div 
-      className="relative rounded-xl overflow-hidden shadow-lg bg-background-light"
+      className="relative rounded-xl overflow-hidden shadow-lg bg-background-light cursor-pointer"
       whileHover={{ scale: 1.03 }}
       transition={{ duration: 0.2 }}
+      onClick={handleClick}
     >
       <div className="relative aspect-[2/3]">
         {imagePath ? (

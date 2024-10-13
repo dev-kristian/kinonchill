@@ -5,7 +5,7 @@ interface Media {
   id: number;
   title?: string;
   name?: string;
-  poster_path: string | null;
+  poster_path?: string;
   media_type: 'movie' | 'tv';
   release_date?: string;
   first_air_date?: string;
