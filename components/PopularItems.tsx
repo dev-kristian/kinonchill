@@ -84,7 +84,7 @@ const PopularItems: React.FC = () => {
   }
 
   if (popularItems.length === 0) {
-    return <div>No items are currently on everyone's watchlist.</div>;
+    return <div>No items are currently on everyone&apos;s watchlist.</div>;
   }
 
   return (

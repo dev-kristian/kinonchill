@@ -54,7 +54,7 @@ export default function SearchResults() {
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold text-primary">
-          Search Results for "{searchquery}"
+          Search Results for &ldquo;{searchquery}&rdquo;
         </h1>
         <Link href="/explore">
           <Button variant="outline">
