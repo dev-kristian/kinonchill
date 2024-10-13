@@ -3,6 +3,7 @@
 'use client'
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -26,8 +27,15 @@ export default function Navigation() {
   return (
     <nav className="bg-background-light p-4">
       <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="text-foreground text-xl font-bold">
-          Movie Hub
+        <Link href="/" className="text-foreground text-xl font-bold flex items-center">
+          <Image 
+            src="/icons/popcorn.svg" 
+            alt="Popcorn icon" 
+            width={24} 
+            height={24} 
+            className="mr-2"
+          />
+          Kino & Chill
         </Link>
         
         {/* Mobile menu button */}

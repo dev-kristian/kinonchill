@@ -8,8 +8,12 @@ import { AuthProvider } from '@/context/AuthContext'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Movie Hub',
+  title: 'Kino & Chill',
   description: 'Track and share movies with friends',
+  icons: {
+    icon: '/icons/popcorn.svg',
+    apple: '/icons/popcorn.svg',
+  },
 }
 
 export default function RootLayout({
