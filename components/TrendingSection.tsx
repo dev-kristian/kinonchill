@@ -4,6 +4,7 @@ import MoviePoster from './MoviePoster';
 import Spinner from './Spinner';
 import { useTrending } from '@/context/TrendingContext';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const TrendingSection: React.FC = () => {
   const { trendingState, mediaType, timeWindow, setMediaType, setTimeWindow, fetchTrending } = useTrending();
@@ -61,7 +62,20 @@ const TrendingSection: React.FC = () => {
   };
 
   if (error) {
-    return <p className="text-destructive text-center">{error}</p>;
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>
+          {error}
+          <button 
+            onClick={() => fetchTrending()} 
+            className="ml-2 underline"
+          >
+            Try again
+          </button>
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   return (
