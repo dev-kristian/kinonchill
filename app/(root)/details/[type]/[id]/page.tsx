@@ -130,11 +130,11 @@ async function getFilma24Links(title: string, year: string, type: string): Promi
       }
     });
     
-    if (bestMatch && bestMatch.href) {
+    if (bestMatch && (bestMatch as BestMatch).href) {
       const serverLinks: ServerLink[] = [];
       
       for (let server = 1; server <= 4; server++) {
-        const serverUrl = `${bestMatch.href}?server=${server}`;
+        const serverUrl = `${(bestMatch as BestMatch).href}?server=${server}`;
         try {
           const moviePageResponse = await fetch(`${workerUrl}?url=${encodeURIComponent(serverUrl)}`, {
             headers: {
