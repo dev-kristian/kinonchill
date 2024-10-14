@@ -1,17 +1,21 @@
 import React from 'react';
 import Image from 'next/image';
-import { CrewMember } from '@/types/types'; // Update the import path as necessary
+import { CrewMember } from '@/types/types';
+
+interface MergedCrewMember extends CrewMember {
+  roles: string[];
+}
 
 interface CrewPosterProps {
-  crewMember: CrewMember;
+  crewMember: MergedCrewMember;
 }
 
 const CrewPoster: React.FC<CrewPosterProps> = ({ crewMember }) => {
-  const { name, profile_path, character, job } = crewMember;
+  const { name, profile_path, roles } = crewMember;
 
   return (
     <div className="relative rounded-lg overflow-hidden shadow-md bg-card transform transition-transform duration-300 hover:scale-105 hover:shadow-lg">
-      <div className="relative aspect-[2/2.5]">
+      <div className="relative aspect-[2/3]">
         {profile_path ? (
           <Image
             src={`https://image.tmdb.org/t/p/w500${profile_path}`}
@@ -29,8 +33,9 @@ const CrewPoster: React.FC<CrewPosterProps> = ({ crewMember }) => {
 
       <div className="p-4">
         <h2 className="text-lg font-semibold text-foreground mb-1 truncate">{name}</h2>
-        {character && <p className="text-sm text-muted-foreground truncate">{character}</p>}
-        {job && <p className="text-sm text-muted-foreground truncate">{job}</p>}
+        {roles.map((role, index) => (
+          <p key={index} className="text-sm text-muted-foreground truncate">{role}</p>
+        ))}
       </div>
     </div>
   );

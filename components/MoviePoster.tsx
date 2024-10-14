@@ -63,6 +63,10 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
     router.push(`/details/${movie.media_type}/${movie.id}`);
   };
 
+  const handleWatchlistContainerClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent click propagation in the entire watchlist container
+  };
+
   return (
     <motion.div 
       className="relative rounded-xl overflow-hidden shadow-lg bg-background-light cursor-pointer"
@@ -109,7 +113,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
         </div>
       </div>
 
-      <div className="bg-background-light flex justify-between items-center px-2 py-1">
+      <div className="bg-background-light flex justify-between items-center px-2 py-1" onClick={handleWatchlistContainerClick}>
         {movie.watchlist_count !== undefined && movie.watchlist_count > 0 ? (
           <div className="flex items-center space-x-1">
             <Users className="text-muted-foreground" />

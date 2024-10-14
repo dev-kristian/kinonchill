@@ -1,5 +1,6 @@
 // components/MediaCarousel.tsx
-import React, { useRef, useState } from 'react';
+
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import MoviePoster from './MoviePoster';
 import Spinner from './Spinner';
@@ -42,6 +43,8 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
   setTimeWindow
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -52,9 +55,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
     setScrollLeft(containerRef.current!.scrollLeft);
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  const handleMouseUp = () => setIsDragging(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging) return;
@@ -63,6 +64,30 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
     const walk = (x - startX) * 2;
     containerRef.current!.scrollLeft = scrollLeft - walk;
   };
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      // Fetch the next page when the sentinel element is visible
+      if (entries[0].isIntersecting && !isLoading) fetchItems();
+    },
+    [isLoading, fetchItems]
+  );
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      threshold: 0.1,
+    });
+
+    if (sentinelRef.current) {
+      observer.observe(sentinelRef.current);
+    }
+
+    return () => {
+      if (sentinelRef.current) {
+        observer.unobserve(sentinelRef.current);
+      }
+    };
+  }, [handleObserver]);
 
   if (error) {
     return (
@@ -125,6 +150,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
               <Spinner size="lg" />
             </div>
           )}
+          <div ref={sentinelRef} className="w-1 h-1" />
         </motion.div>
       </div>
     </div>

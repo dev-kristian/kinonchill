@@ -1,9 +1,10 @@
 import React from 'react';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import CrewCarousel from '@/components/CrewCarousel';
-import { DetailsData, CrewMember } from '@/types/types'; // Update the import path as necessary
-
+import { DetailsData, CrewMember, ServerLink } from '@/types/types';
+import DetailPageWrapper from '@/components/DetailPageWrapper';
+import * as cheerio from 'cheerio';
+import { BestMatch } from '@/types/types';
 interface DetailPageProps {
   params: {
     type: string;
@@ -58,103 +59,129 @@ async function getDetails(type: string, id: string): Promise<DetailsData> {
   return { ...detailsData, contentRating, credits: creditsData };
 }
 
-const getScoreColor = (score: number): string => {
-  if (score >= 7) return 'border-green-500';
-  if (score >= 5) return 'border-yellow-500';
-  return 'border-red-500';
-};
+async function getFilma24Links(title: string, year: string, type: string): Promise<ServerLink[]> {
+  if (type === 'tv') {
+    const formattedTitle = title.toLowerCase().replace(/\s+/g, '-');
+    const possibleUrls = [
+      `https://www.filma24.blog/seriale/${formattedTitle}-seriale-me-titra-shqip/`,
+      `https://www.filma24.blog/seriale/${formattedTitle}-me-titra-shqip/`,
+      `https://www.filma24.blog/seriale/${formattedTitle}/`
+    ];
+
+    for (const url of possibleUrls) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          return [{ server: 1, link: url }];
+        }
+      } catch (error) {
+        console.error(`Error checking URL ${url}:`, error);
+      }
+    }
+
+    console.error('No valid URL found for TV show:', title);
+    return [];
+  }
+
+  // Existing logic for movies
+  const searchUrl = `https://www.filma24.blog/search/${encodeURIComponent(title)}`;
+  
+  try {
+    const searchResponse = await fetch(searchUrl);
+    if (!searchResponse.ok) {
+      throw new Error(`HTTP error! status: ${searchResponse.status}`);
+    }
+    const searchHtml = await searchResponse.text();
+    const $ = cheerio.load(searchHtml);
+    
+    let bestMatch: BestMatch | null = null;
+    
+    $('.movie-thumb.col-6').each((_, element) => {
+      const $element = $(element);
+      const movieTitle = $element.find('h4').text().trim();
+      const movieYear = $element.find('.jt-info').eq(1).text().trim();
+      const movieHref = $element.find('a.jt').attr('href');
+      
+      if (movieHref && typeof movieHref === 'string') {
+        const titleSimilarity = compareTitles(title, movieTitle);
+        const yearMatch = movieYear === year;
+        
+        const similarity = titleSimilarity + (yearMatch ? 1 : 0);
+        
+        if (!bestMatch || similarity > bestMatch.similarity) {
+          bestMatch = { similarity, href: movieHref };
+        }
+      }
+    });
+    
+    if (bestMatch && (bestMatch as BestMatch).href) {
+      const serverLinks: ServerLink[] = [];
+      
+      for (let server = 1; server <= 4; server++) {
+        const serverUrl = `${(bestMatch as BestMatch).href}?server=${server}`;
+        const moviePageResponse = await fetch(serverUrl);
+        if (moviePageResponse.ok) {
+          const moviePageHtml = await moviePageResponse.text();
+          const $moviePage = cheerio.load(moviePageHtml);
+          
+          const iframeSrc = $moviePage('#plx iframe').attr('src');
+          if (iframeSrc) {
+            serverLinks.push({ server, link: iframeSrc });
+          }
+        }
+      }
+      
+      return serverLinks;
+    }
+  } catch (error) {
+    console.error('Error fetching Filma24 links:', error);
+  }
+  
+  return [];
+}
+
+function compareTitles(title1: string, title2: string): number {
+  const cleanTitle1 = title1.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cleanTitle2 = title2.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  let similarity = 0;
+  const minLength = Math.min(cleanTitle1.length, cleanTitle2.length);
+  
+  for (let i = 0; i < minLength; i++) {
+    if (cleanTitle1[i] === cleanTitle2[i]) {
+      similarity++;
+    }
+  }
+  
+  return similarity / Math.max(cleanTitle1.length, cleanTitle2.length);
+}
 
 export default async function DetailPage({ params }: DetailPageProps) {
   let details: DetailsData;
+  let filma24Links: ServerLink[] = [];
+
   try {
     details = await getDetails(params.type, params.id);
+    const releaseYear = new Date(details.first_air_date || details.release_date || '').getFullYear().toString();
+    filma24Links = await getFilma24Links(details.title || details.name || '', releaseYear, params.type);
   } catch (error) {
     console.error('Error fetching details:', error);
     notFound();
   }
 
-  const releaseYear = new Date(details.first_air_date || details.release_date || '').getFullYear();
-  const crewMembers: CrewMember[] = [...details.credits.cast, ...details.credits.crew];
-
   return (
     <div>
-      <div className="relative min-h-[calc(100vh-60px)]">
-        <div className="absolute inset-0">
-          <Image
-            src={`https://image.tmdb.org/t/p/original${details.backdrop_path}`}
-            alt={details.title || details.name || 'Backdrop'}
-            layout="fill"
-            objectFit="cover"
-            quality={100}
-            priority
-            className="filter blur-md"
-          />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent"></div>
-        <div className="relative z-10 text-white p-2 md:p-8 max-w-6xl mx-auto w-full overflow-y-auto flex flex-col">
-          <div className="flex flex-col md:flex-row items-center md:items-start">
-            <div className="w-2/3 md:w-1/3 mb-6 md:mb-0">
-              <Image
-                src={`https://image.tmdb.org/t/p/w500${details.poster_path}`}
-                alt={details.title || details.name || 'Poster'}
-                width={300}
-                height={450}
-                className="rounded-lg shadow-2xl mx-auto md:mx-0"
-              />
-            </div>
-            <div className="w-full md:w-2/3 md:ml-10 text-center md:text-left">
-              <h1 className="text-3xl md:text-5xl font-bold mb-2 tracking-tight">
-                {details.title || details.name} <span className="text-2xl md:text-3xl font-light">({releaseYear})</span>
-              </h1>
-              <div className="mb-4 flex flex-wrap items-center justify-center md:justify-start space-x-4">
-                {details.contentRating && (
-                  <span className="text-sm font-medium py-1 px-3 rounded-full bg-white/20 backdrop-blur-sm text-white">
-                    {details.contentRating}
-                  </span>
-                )}
-                <span className="text-sm font-light">
-                  {details.genres.map((genre) => genre.name).join(', ')}
-                </span>
-              </div>
-              <div className="flex items-center justify-center md:justify-start mb-6 space-x-4">
-                <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-sm border-4 ${getScoreColor(details.vote_average)}`}>
-                  <span className="text-xl md:text-2xl font-bold">
-                    {details.vote_average.toFixed(1)}
-                  </span>
-                </div>
-                <p className="text-lg md:text-xl font-light italic">{details.tagline}</p>
-              </div>
-              <div className="mb-6">
-                <p className="text-base md:text-lg leading-relaxed">{details.overview}</p>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <h3 className="font-semibold text-gray-400">First Air Date</h3>
-                  <p>{details.first_air_date || details.release_date}</p>
-                </div>
-                {details.number_of_seasons && (
-                  <div>
-                    <h3 className="font-semibold text-gray-400">Seasons</h3>
-                    <p>{details.number_of_seasons}</p>
-                  </div>
-                )}
-                {details.number_of_episodes && (
-                  <div>
-                    <h3 className="font-semibold text-gray-400">Episodes</h3>
-                    <p>{details.number_of_episodes}</p>
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-semibold text-gray-400">Status</h3>
-                  <p>{details.status}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DetailPageWrapper
+        details={details}
+        filma24Links={filma24Links}
+      />
       <div className="py-8 w-full px-2 md:px-8">
-        <CrewCarousel crewMembers={crewMembers} isLoading={false} error={null} />
+        <CrewCarousel 
+          cast={details.credits.cast} 
+          crew={details.credits.crew}
+          isLoading={false} 
+          error={null} 
+        />
       </div>
     </div>
   );

@@ -1,17 +1,22 @@
-'use client';
-import React, { useRef, useState } from 'react';
+'use client'
+import React, { useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import CrewPoster from './CrewPoster';
 import Spinner from './Spinner';
-import { CrewMember } from '@/types/types'; // Update the import path as necessary
+import { CrewMember } from '@/types/types';
 
 interface CrewCarouselProps {
-  crewMembers: CrewMember[];
+  cast: CrewMember[];
+  crew: CrewMember[];
   isLoading: boolean;
   error: string | null;
 }
 
-const CrewCarousel: React.FC<CrewCarouselProps> = ({ crewMembers, isLoading, error }) => {
+interface MergedCrewMember extends CrewMember {
+  roles: string[];
+}
+
+const CrewCarousel: React.FC<CrewCarouselProps> = ({ cast, crew, isLoading, error }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -37,12 +42,25 @@ const CrewCarousel: React.FC<CrewCarouselProps> = ({ crewMembers, isLoading, err
     containerRef.current!.scrollLeft = scrollLeft - walk;
   };
 
+  const mergedCrewMembers = useMemo(() => {
+    const memberMap = new Map<number, MergedCrewMember>();
+
+    const addMember = (member: CrewMember, role: string) => {
+      if (memberMap.has(member.id)) {
+        memberMap.get(member.id)!.roles.push(role);
+      } else {
+        memberMap.set(member.id, { ...member, roles: [role] });
+      }
+    };
+
+    cast.forEach(member => addMember(member, member.character || 'Cast'));
+    crew.forEach(member => addMember(member, member.job || 'Crew'));
+
+    return Array.from(memberMap.values());
+  }, [cast, crew]);
+
   if (error) {
-    return (
-      <div className="text-red-500">
-        {error}
-      </div>
-    );
+    return <div className="text-red-500">{error}</div>;
   }
 
   return (
@@ -66,7 +84,7 @@ const CrewCarousel: React.FC<CrewCarouselProps> = ({ crewMembers, isLoading, err
         }}
       >
         <motion.div className="flex space-x-4 flex-nowrap">
-          {crewMembers.map((crewMember) => (
+          {mergedCrewMembers.map((crewMember) => (
             <div key={crewMember.id} className="flex-none w-40 sm:w-48 lg:w-56">
               <CrewPoster crewMember={crewMember} />
             </div>

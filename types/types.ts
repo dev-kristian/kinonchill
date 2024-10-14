@@ -9,10 +9,9 @@ export interface Movie {
   media_type?: string;
   release_date?: string;
   first_air_date?: string;
-  watchlist_count?: number;  // Add this line
+  watchlist_count?: number;
 }
 
-// types.ts
 export interface CrewMember {
   id: number;
   name: string;
@@ -46,4 +45,14 @@ export interface DetailsData {
     cast: CrewMember[];
     crew: CrewMember[];
   };
+}
+
+export interface ServerLink {
+  server: number;
+  link: string;
+}
+
+export interface BestMatch {
+  similarity: number;
+  href: string;
 }
