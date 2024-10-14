@@ -1,10 +1,11 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import CrewCarousel from '@/components/CrewCarousel';
-import { DetailsData, CrewMember, ServerLink } from '@/types/types';
+import { DetailsData, ServerLink } from '@/types/types';
 import DetailPageWrapper from '@/components/DetailPageWrapper';
 import * as cheerio from 'cheerio';
 import { BestMatch } from '@/types/types';
+
 interface DetailPageProps {
   params: {
     type: string;
