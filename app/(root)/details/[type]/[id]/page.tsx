@@ -61,6 +61,7 @@ async function getDetails(type: string, id: string): Promise<DetailsData> {
 }
 
 async function getFilma24Links(title: string, year: string, type: string): Promise<ServerLink[]> {
+  console.log("Worker URL:", workerUrl);
   if (!workerUrl) {
     console.error('Cloudflare Worker URL is not set');
     return [];
@@ -76,12 +77,17 @@ async function getFilma24Links(title: string, year: string, type: string): Promi
 
     for (const url of possibleUrls) {
       try {
-        const response = await fetch(`${workerUrl}?url=${encodeURIComponent(url)}`);
+        const response = await fetch(`${workerUrl}?url=${encodeURIComponent(url)}`, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          }
+        });
         if (response.ok) {
           return [{ server: 1, link: url }];
         }
       } catch (error) {
         console.error(`Error checking URL ${url}:`, error);
+        logDetailedError(error);
       }
     }
 
@@ -93,7 +99,11 @@ async function getFilma24Links(title: string, year: string, type: string): Promi
   const searchUrl = `https://www.filma24.blog/search/${encodeURIComponent(title)}`;
   
   try {
-    const searchResponse = await fetch(`${workerUrl}?url=${encodeURIComponent(searchUrl)}`);
+    const searchResponse = await fetch(`${workerUrl}?url=${encodeURIComponent(searchUrl)}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      }
+    });
     if (!searchResponse.ok) {
       throw new Error(`HTTP error! status: ${searchResponse.status}`);
     }
@@ -120,32 +130,55 @@ async function getFilma24Links(title: string, year: string, type: string): Promi
       }
     });
     
-    if (bestMatch && (bestMatch as BestMatch).href) {
+    if (bestMatch && bestMatch.href) {
       const serverLinks: ServerLink[] = [];
       
       for (let server = 1; server <= 4; server++) {
-        const serverUrl = `${(bestMatch as BestMatch).href}?server=${server}`;
-        const moviePageResponse = await fetch(`${workerUrl}?url=${encodeURIComponent(serverUrl)}`);
-        if (moviePageResponse.ok) {
-          const moviePageHtml = await moviePageResponse.text();
-          const $moviePage = cheerio.load(moviePageHtml);
-          
-          const iframeSrc = $moviePage('#plx iframe').attr('src');
-          if (iframeSrc) {
-            serverLinks.push({ server, link: iframeSrc });
+        const serverUrl = `${bestMatch.href}?server=${server}`;
+        try {
+          const moviePageResponse = await fetch(`${workerUrl}?url=${encodeURIComponent(serverUrl)}`, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            }
+          });
+          if (moviePageResponse.ok) {
+            const moviePageHtml = await moviePageResponse.text();
+            const $moviePage = cheerio.load(moviePageHtml);
+            
+            const iframeSrc = $moviePage('#plx iframe').attr('src');
+            if (iframeSrc) {
+              serverLinks.push({ server, link: iframeSrc });
+            }
+          } else {
+            console.error(`Error fetching server ${server}:`, moviePageResponse.status, await moviePageResponse.text());
           }
+        } catch (error) {
+          console.error(`Error processing server ${server}:`, error);
+          logDetailedError(error);
         }
       }
       
       return serverLinks;
+    } else {
+      console.error('No matching movie found for:', title, year);
     }
   } catch (error) {
     console.error('Error fetching Filma24 links:', error);
+    logDetailedError(error);
   }
   
   return [];
 }
-
+function logDetailedError(error: unknown) {
+  if (error instanceof Error) {
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+  }
+  if (error instanceof Response) {
+    console.error('Response status:', error.status);
+    error.text().then(text => console.error('Response text:', text));
+  }
+}
 function compareTitles(title1: string, title2: string): number {
   const cleanTitle1 = title1.toLowerCase().replace(/[^a-z0-9]/g, '');
   const cleanTitle2 = title2.toLowerCase().replace(/[^a-z0-9]/g, '');
