@@ -1,8 +1,8 @@
-// app/(root)/details/[type]/[id]/page.tsx
 import React from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import CrewCarousel from '@/components/CrewCarousel';
+import { DetailsData, CrewMember } from '@/types/types'; // Update the import path as necessary
 
 interface DetailPageProps {
   params: {
@@ -11,7 +11,7 @@ interface DetailPageProps {
   };
 }
 
-async function getDetails(type: string, id: string) {
+async function getDetails(type: string, id: string): Promise<DetailsData> {
   const bearerToken = process.env.NEXT_PRIVATE_TMDB_API_KEY;
   const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?language=en-US`;
   const contentRatingsUrl = `https://api.themoviedb.org/3/${type}/${id}/content_ratings`;
@@ -51,21 +51,21 @@ async function getDetails(type: string, id: string) {
 
   if (contentRatingsResponse) {
     const contentRatingsData = await contentRatingsResponse.json();
-    const usRating = contentRatingsData.results.find((rating: any) => rating.iso_3166_1 === 'US');
+    const usRating = contentRatingsData.results.find((rating: { iso_3166_1: string }) => rating.iso_3166_1 === 'US');
     contentRating = usRating ? usRating.rating : null;
   }
 
   return { ...detailsData, contentRating, credits: creditsData };
 }
 
-const getScoreColor = (score: number) => {
+const getScoreColor = (score: number): string => {
   if (score >= 7) return 'border-green-500';
   if (score >= 5) return 'border-yellow-500';
   return 'border-red-500';
 };
 
 export default async function DetailPage({ params }: DetailPageProps) {
-  let details;
+  let details: DetailsData;
   try {
     details = await getDetails(params.type, params.id);
   } catch (error) {
@@ -73,16 +73,16 @@ export default async function DetailPage({ params }: DetailPageProps) {
     notFound();
   }
 
-  const releaseYear = new Date(details.first_air_date || details.release_date).getFullYear();
-  const crewMembers = details.credits.cast.concat(details.credits.crew);
+  const releaseYear = new Date(details.first_air_date || details.release_date || '').getFullYear();
+  const crewMembers: CrewMember[] = [...details.credits.cast, ...details.credits.crew];
 
   return (
-    <div >
+    <div>
       <div className="relative min-h-[calc(100vh-60px)]">
         <div className="absolute inset-0">
           <Image
             src={`https://image.tmdb.org/t/p/original${details.backdrop_path}`}
-            alt={details.title || details.name}
+            alt={details.title || details.name || 'Backdrop'}
             layout="fill"
             objectFit="cover"
             quality={100}
@@ -96,7 +96,7 @@ export default async function DetailPage({ params }: DetailPageProps) {
             <div className="w-2/3 md:w-1/3 mb-6 md:mb-0">
               <Image
                 src={`https://image.tmdb.org/t/p/w500${details.poster_path}`}
-                alt={details.title || details.name}
+                alt={details.title || details.name || 'Poster'}
                 width={300}
                 height={450}
                 className="rounded-lg shadow-2xl mx-auto md:mx-0"
@@ -113,7 +113,7 @@ export default async function DetailPage({ params }: DetailPageProps) {
                   </span>
                 )}
                 <span className="text-sm font-light">
-                  {details.genres.map((genre: any) => genre.name).join(', ')}
+                  {details.genres.map((genre) => genre.name).join(', ')}
                 </span>
               </div>
               <div className="flex items-center justify-center md:justify-start mb-6 space-x-4">

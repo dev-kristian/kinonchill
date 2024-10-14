@@ -1,5 +1,5 @@
 // components/MediaCarousel.tsx
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import MoviePoster from './MoviePoster';
 import Spinner from './Spinner';

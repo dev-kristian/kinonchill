@@ -3,14 +3,7 @@ import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import CrewPoster from './CrewPoster';
 import Spinner from './Spinner';
-
-interface CrewMember {
-  id: number;
-  name: string;
-  profile_path?: string;
-  character?: string;
-  job?: string;
-}
+import { CrewMember } from '@/types/types'; // Update the import path as necessary
 
 interface CrewCarouselProps {
   crewMembers: CrewMember[];

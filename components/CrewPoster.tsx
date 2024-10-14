@@ -1,13 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-
-interface CrewMember {
-  id: number;
-  name: string;
-  profile_path?: string;
-  character?: string;
-  job?: string;
-}
+import { CrewMember } from '@/types/types'; // Update the import path as necessary
 
 interface CrewPosterProps {
   crewMember: CrewMember;
