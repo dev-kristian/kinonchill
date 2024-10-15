@@ -28,9 +28,6 @@ const DetailPageWrapper: React.FC<DetailPageWrapperProps> = ({ details, videos }
 
   const trailer = videos.find(video => video.type === 'Trailer' && video.site === 'YouTube');
 
-  const mainCast = details.credits.cast.slice(0, 5);
-  const director = details.credits.crew.find(crew => crew.job === 'Director');
-
   const isInWatchlist = userData?.watchlist[isMovie ? 'movie' : 'tv'][details.id.toString()];
 
   const handleWatchlistClick = () => {

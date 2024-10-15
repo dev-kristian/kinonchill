@@ -54,7 +54,7 @@ const DetailInfo: React.FC<DetailInfoProps> = ({
             </div>
           </div>
           {tagline && (
-            <p className="text-lg md:text-xl italic text-gray-300 ml-4">"{tagline}"</p>
+            <p className="text-lg md:text-xl italic text-gray-300 ml-4">&quot;{tagline}&quot;</p>
           )}
         </div>
       </div>

@@ -18,7 +18,6 @@ interface MergedCrewMember extends CrewMember {
 }
 
 const CrewCarousel: React.FC<CrewCarouselProps> = ({ cast, crew, isLoading, error }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const controls = useAnimation();
 
   const mergedCrewMembers = useMemo(() => {
@@ -58,7 +57,7 @@ const CrewCarousel: React.FC<CrewCarouselProps> = ({ cast, crew, isLoading, erro
       </h2>
       <div className="overflow-x-auto py-4 md:px-2">
         <div className="flex space-x-4">
-          {mergedCrewMembers.map((crewMember, index) => (
+          {mergedCrewMembers.map((crewMember) => (
             <motion.div 
               key={crewMember.id} 
               className="flex-none w-40"
