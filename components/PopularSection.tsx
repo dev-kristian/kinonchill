@@ -10,7 +10,6 @@ const PopularSection: React.FC = () => {
 
   return (
     <MediaCarousel
-      title="Popular"
       items={popularItems[mediaType]}
       isLoading={isLoading}
       error={error}

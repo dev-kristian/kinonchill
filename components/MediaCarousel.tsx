@@ -1,5 +1,3 @@
-// components/MediaCarousel.tsx
-
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import MoviePoster from './MoviePoster';
@@ -29,6 +27,8 @@ interface MediaCarouselProps {
   fetchItems: () => void;
   timeWindow?: 'day' | 'week';
   setTimeWindow?: (window: 'day' | 'week') => void;
+  listType?: 'popular' | 'top_rated';
+  setListType?: (type: 'popular' | 'top_rated') => void;
 }
 
 const MediaCarousel: React.FC<MediaCarouselProps> = ({
@@ -40,7 +40,9 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
   setMediaType,
   fetchItems,
   timeWindow,
-  setTimeWindow
+  setTimeWindow,
+  listType,
+  setListType
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -67,7 +69,6 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
-      // Fetch the next page when the sentinel element is visible
       if (entries[0].isIntersecting && !isLoading) fetchItems();
     },
     [isLoading, fetchItems]
@@ -105,25 +106,35 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
 
   return (
     <div className="mb-8">
-      {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
-      <div className="flex flex-col md:flex-row md:space-x-4 mb-4">
-        <Tabs value={mediaType} onValueChange={(value) => setMediaType(value as 'movie' | 'tv')} className="mb-4 md:mb-0">
-          <TabsList>
-            <TabsTrigger value="movie">Movies</TabsTrigger>
-            <TabsTrigger value="tv">TV Shows</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        {timeWindow && setTimeWindow && (
+      {title && <h2 className="text-2xl font-bold mb-2">{title}</h2>}
+      <div className="flex flex-col md:flex-row md:space-x-2 mb-4">
+        {setTimeWindow && timeWindow ? (
+          <Tabs value={mediaType} onValueChange={(value) => setMediaType(value as 'movie' | 'tv')} className="mb-4 md:mb-0">
+            <TabsList>
+              <TabsTrigger value="movie">Movies</TabsTrigger>
+              <TabsTrigger value="tv">TV Shows</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        ) : null}
+        {setTimeWindow && timeWindow ? (
           <Tabs value={timeWindow} onValueChange={(value) => setTimeWindow(value as 'day' | 'week')}>
             <TabsList>
               <TabsTrigger value="day">Today</TabsTrigger>
               <TabsTrigger value="week">This Week</TabsTrigger>
             </TabsList>
           </Tabs>
-        )}
+        ) : null}
+        {setListType && listType ? (
+          <Tabs value={listType} onValueChange={(value) => setListType(value as 'popular' | 'top_rated')}>
+            <TabsList>
+              <TabsTrigger value="popular">Popular</TabsTrigger>
+              <TabsTrigger value="top_rated">Top Rated</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        ) : null}
       </div>
       <div
-        className="overflow-x-auto py-6 px-4 cursor-grab active:cursor-grabbing"
+        className="overflow-x-auto py-6 cursor-grab active:cursor-grabbing"
         ref={containerRef}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
@@ -142,7 +153,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
         >
           {items.map((item) => (
             <div key={item.id} className="flex-none w-48">
-              <MoviePoster movie={item} />
+              <MoviePoster movie={{...item, media_type: item.media_type || mediaType}} />
             </div>
           ))}
           {isLoading && (

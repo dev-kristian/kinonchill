@@ -31,7 +31,6 @@ interface MovieTVDetails {
   release_date?: string;
   first_air_date?: string;
   vote_average: number;
-  // watchlist_count will be handled separately
 }
 
 interface UserDataContextType {

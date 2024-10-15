@@ -1,10 +1,11 @@
+// DetailPage.tsx
 import React from 'react';
 import { notFound } from 'next/navigation';
-import CrewCarousel from '@/components/CrewCarousel';
-import { DetailsData, ServerLink } from '@/types/types';
-import DetailPageWrapper from '@/components/DetailPageWrapper';
-import * as cheerio from 'cheerio';
-import { BestMatch } from '@/types/types';
+import CrewCarousel from '@/components/details/CrewCarousel';
+import { DetailsData } from '@/types/types';
+import DetailPageWrapper from '@/components/details/DetailPageWrapper';
+import { VideoData } from '@/types/types';
+import SeasonCarousel from '@/components/details/SeasonCarousel';
 
 interface DetailPageProps {
   params: {
@@ -12,7 +13,8 @@ interface DetailPageProps {
     id: string;
   };
 }
-const workerUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_URL;
+
+
 async function getDetails(type: string, id: string): Promise<DetailsData> {
   const bearerToken = process.env.NEXT_PRIVATE_TMDB_API_KEY;
   const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?language=en-US`;
@@ -60,134 +62,15 @@ async function getDetails(type: string, id: string): Promise<DetailsData> {
   return { ...detailsData, contentRating, credits: creditsData };
 }
 
-async function getFilma24Links(title: string, year: string, type: string): Promise<ServerLink[]> {
-  console.log("Worker URL:", workerUrl);
-  if (!workerUrl) {
-    console.error('Cloudflare Worker URL is not set');
-    return [];
-  }
-
-  const fetchWithRetry = async (url: string, retries = 3): Promise<Response> => {
-    for (let i = 0; i < retries; i++) {
-      try {
-        const response = await fetch(`${workerUrl}?url=${encodeURIComponent(url)}`, {
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return response;
-      } catch (error) {
-        console.error(`Attempt ${i + 1} failed:`, error);
-        if (i === retries - 1) throw error;
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
-      }
-    }
-    throw new Error('Fetch failed after all retries');
-  };
-
-  if (type === 'tv') {
-    const formattedTitle = title.toLowerCase().replace(/\s+/g, '-');
-    const possibleUrls = [
-      `https://www.filma24.blog/seriale/${formattedTitle}-seriale-me-titra-shqip/`,
-      `https://www.filma24.blog/seriale/${formattedTitle}-me-titra-shqip/`,
-      `https://www.filma24.blog/seriale/${formattedTitle}/`
-    ];
-
-    for (const url of possibleUrls) {
-      try {
-        await fetchWithRetry(url);
-        return [{ server: 1, link: url }];
-      } catch (error) {
-        console.error(`Error checking URL ${url}:`, error);
-      }
-    }
-
-    console.error('No valid URL found for TV show:', title);
-    return [];
-  }
-
-  // Logic for movies
-  const searchUrl = `https://www.filma24.blog/search/${encodeURIComponent(title)}`;
-  
-  try {
-    const searchResponse = await fetchWithRetry(searchUrl);
-    const searchHtml = await searchResponse.text();
-    const $ = cheerio.load(searchHtml);
-    
-    let bestMatch: BestMatch | null = null;
-    
-    $('.movie-thumb.col-6').each((_, element) => {
-      const $element = $(element);
-      const movieTitle = $element.find('h4').text().trim();
-      const movieYear = $element.find('.jt-info').eq(1).text().trim();
-      const movieHref = $element.find('a.jt').attr('href');
-      
-      if (movieHref && typeof movieHref === 'string') {
-        const titleSimilarity = compareTitles(title, movieTitle);
-        const yearMatch = movieYear === year;
-        
-        const similarity = titleSimilarity + (yearMatch ? 1 : 0);
-        
-        if (!bestMatch || similarity > bestMatch.similarity) {
-          bestMatch = { similarity, href: movieHref };
-        }
-      }
-    });
-    
-    if (bestMatch && (bestMatch as BestMatch).href) {
-      const serverLinks: ServerLink[] = [];
-      
-      for (let server = 1; server <= 4; server++) {
-        const serverUrl = `${(bestMatch as BestMatch).href}?server=${server}`;
-        try {
-          const moviePageResponse = await fetchWithRetry(serverUrl);
-          const moviePageHtml = await moviePageResponse.text();
-          const $moviePage = cheerio.load(moviePageHtml);
-          
-          const iframeSrc = $moviePage('#plx iframe').attr('src');
-          if (iframeSrc) {
-            serverLinks.push({ server, link: iframeSrc });
-          }
-        } catch (error) {
-          console.error(`Error processing server ${server}:`, error);
-        }
-      }
-      
-      return serverLinks;
-    } else {
-      console.error('No matching movie found for:', title, year);
-    }
-  } catch (error) {
-    console.error('Error fetching Filma24 links:', error);
-  }
-  
-  return [];
-}
-function compareTitles(title1: string, title2: string): number {
-  const cleanTitle1 = title1.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const cleanTitle2 = title2.toLowerCase().replace(/[^a-z0-9]/g, '');
-  
-  let similarity = 0;
-  const minLength = Math.min(cleanTitle1.length, cleanTitle2.length);
-  
-  for (let i = 0; i < minLength; i++) {
-    if (cleanTitle1[i] === cleanTitle2[i]) {
-      similarity++;
-    }
-  }
-  
-  return similarity / Math.max(cleanTitle1.length, cleanTitle2.length);
-}
-
 export default async function DetailPage({ params }: DetailPageProps) {
   let details: DetailsData;
-  let filma24Links: ServerLink[] = [];
+  let videos: VideoData[];
 
   try {
-    details = await getDetails(params.type, params.id);
-    const releaseYear = new Date(details.first_air_date || details.release_date || '').getFullYear().toString();
-    filma24Links = await getFilma24Links(details.title || details.name || '', releaseYear, params.type);
+    [details, videos] = await Promise.all([
+      getDetails(params.type, params.id),
+      getVideos(params.type, params.id)
+    ]);
   } catch (error) {
     console.error('Error fetching details:', error);
     notFound();
@@ -197,9 +80,12 @@ export default async function DetailPage({ params }: DetailPageProps) {
     <div>
       <DetailPageWrapper
         details={details}
-        filma24Links={filma24Links}
+        videos={videos}
       />
-      <div className="py-8 w-full px-2 md:px-8">
+      <div className="pt-4 w-full px-2 md:px-8">
+        {params.type === 'tv' && details.seasons && (
+            <SeasonCarousel seasons={details.seasons} />
+        )}
         <CrewCarousel 
           cast={details.credits.cast} 
           crew={details.credits.crew}
@@ -209,4 +95,24 @@ export default async function DetailPage({ params }: DetailPageProps) {
       </div>
     </div>
   );
+}
+
+async function getVideos(type: string, id: string): Promise<VideoData[]> {
+  const bearerToken = process.env.NEXT_PRIVATE_TMDB_API_KEY;
+  const videosUrl = `https://api.themoviedb.org/3/${type}/${id}/videos`;
+
+  const response = await fetch(videosUrl, {
+    headers: {
+      'Authorization': `Bearer ${bearerToken}`,
+      'accept': 'application/json'
+    },
+    next: { revalidate: 3600 }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch videos: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.results;
 }
