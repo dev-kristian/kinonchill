@@ -1,6 +1,6 @@
 // CrewCarousel.tsx
 'use client'
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Spinner from '../Spinner';
