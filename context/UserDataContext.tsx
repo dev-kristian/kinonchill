@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore';
 
 interface UserData {
+  username: string;
   watchlist: {
     movie: { [movieId: string]: boolean };
     tv: { [tvId: string]: boolean };
@@ -62,12 +63,21 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
+    const userDocRef = doc(db, 'users', user.uid);
     const watchlistDocRef = doc(db, 'users', user.uid, 'userMovieData', 'watchlist');
-    const unsubscribe = onSnapshot(watchlistDocRef, (docSnapshot) => {
+
+    const unsubscribe = onSnapshot(userDocRef, async (docSnapshot) => {
       if (docSnapshot.exists()) {
-        setUserData(docSnapshot.data() as UserData);
+        const userInfo = docSnapshot.data();
+        const watchlistSnapshot = await getDoc(watchlistDocRef);
+        const watchlistData = watchlistSnapshot.exists() ? watchlistSnapshot.data() : { watchlist: { movie: {}, tv: {} } };
+
+        setUserData({
+          username: userInfo.username,
+          ...watchlistData
+        } as UserData);
       } else {
-        setUserData({ watchlist: { movie: {}, tv: {} } });
+        setUserData({ username: '', watchlist: { movie: {}, tv: {} } });
       }
       setIsLoading(false);
     });
@@ -77,16 +87,15 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addToWatchlist = async (item: MovieTVDetails, mediaType: 'movie' | 'tv') => {
     if (!user || !userData) return;
-  
+
     const userDocRef = doc(db, 'users', user.uid);
     const watchlistDocRef = doc(db, 'users', user.uid, 'userMovieData', 'watchlist');
-    const itemCollectionRef = collection(db, mediaType === 'movie' ? 'movies' : 'tvShows');
-    const itemDocRef = doc(itemCollectionRef, item.id.toString());
-  
+    const itemsDocRef = doc(db, mediaType === 'movie' ? 'movies' : 'tvShows', 'allItems');
+
     try {
       // Ensure user document exists in the root users collection
       await setDoc(userDocRef, { email: user.email }, { merge: true });
-  
+
       // Add to user's watchlist
       await setDoc(watchlistDocRef, {
         watchlist: {
@@ -98,34 +107,25 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }, { merge: true });
 
-      // Check if the item already exists in the collection
-      const itemDoc = await getDoc(itemDocRef);
-      const now = Timestamp.now();
-      
-      if (!itemDoc.exists()) {
-        // If it doesn't exist, add it to the collection with initial watchlist_count of 1
-        await setDoc(itemDocRef, {
-          ...item,
-          last_updated: serverTimestamp(),
-          watchlist_count: 1
-        });
-      } else {
-        // If it exists, increment the watchlist_count and update if necessary
-        const data = itemDoc.data();
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-        if (data.last_updated.toDate() < oneWeekAgo) {
-          // If the data is older than a week, update it
-          await updateDoc(itemDocRef, {
-            ...item,
-            last_updated: serverTimestamp(),
-            watchlist_count: increment(1)
+      // Update the item in the allItems document
+      const itemsDoc = await getDoc(itemsDocRef);
+      if (itemsDoc.exists()) {
+        const itemsData = itemsDoc.data();
+        if (itemsData[item.id]) {
+          // If the item exists, increment the watchlist_count
+          await updateDoc(itemsDocRef, {
+            [`${item.id}.watchlist_count`]: increment(1),
+            [`${item.id}.last_updated`]: serverTimestamp()
           });
         } else {
-          // If the data is recent, just increment the watchlist_count
-          await updateDoc(itemDocRef, {
-            watchlist_count: increment(1)
+          // If the item doesn't exist, add it with initial watchlist_count of 1
+          await updateDoc(itemsDocRef, {
+            [item.id]: {
+              ...item,
+              media_type: mediaType,
+              last_updated: serverTimestamp(),
+              watchlist_count: 1
+            }
           });
         }
       }
@@ -138,22 +138,22 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const removeFromWatchlist = async (id: number, mediaType: 'movie' | 'tv') => {
     if (!user || !userData) return;
-  
+
     try {
       const watchlistDocRef = doc(db, 'users', user.uid, 'userMovieData', 'watchlist');
-      const itemCollectionRef = collection(db, mediaType === 'movie' ? 'movies' : 'tvShows');
-      const itemDocRef = doc(itemCollectionRef, id.toString());
-  
+      const itemsDocRef = doc(db, mediaType === 'movie' ? 'movies' : 'tvShows', 'allItems');
+
       // Remove from user's watchlist
       await updateDoc(watchlistDocRef, {
         [`watchlist.${mediaType}.${id.toString()}`]: deleteField()
       });
-  
-      // Decrement the watchlist_count in the central collection
-      await updateDoc(itemDocRef, {
-        watchlist_count: increment(-1)
+
+      // Decrement the watchlist_count in the allItems document
+      await updateDoc(itemsDocRef, {
+        [`${id}.watchlist_count`]: increment(-1),
+        [`${id}.last_updated`]: serverTimestamp()
       });
-  
+
       console.log(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} ID ${id} removed from watchlist successfully.`);
     } catch (error) {
       console.error(`Error removing ${mediaType} from watchlist:`, error);

@@ -21,10 +21,12 @@ interface MediaCarouselProps {
   title?: string;
   items: MediaItem[];
   isLoading: boolean;
+  showMediaTypeTabs?: boolean;
   error: string | null;
+  fetchItems?: () => void; // Make this optional
+
   mediaType: 'movie' | 'tv';
-  setMediaType: (type: 'movie' | 'tv') => void;
-  fetchItems: () => void;
+  setMediaType?: (type: 'movie' | 'tv') => void;
   timeWindow?: 'day' | 'week';
   setTimeWindow?: (window: 'day' | 'week') => void;
   listType?: 'popular' | 'top_rated';
@@ -36,9 +38,9 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
   items,
   isLoading,
   error,
+  fetchItems,
   mediaType,
   setMediaType,
-  fetchItems,
   timeWindow,
   setTimeWindow,
   listType,
@@ -69,9 +71,11 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
-      if (entries[0].isIntersecting && !isLoading) fetchItems();
+      if (entries[0].isIntersecting && !isLoading && items.length === 0 && fetchItems) {
+        fetchItems();
+      }
     },
-    [isLoading, fetchItems]
+    [isLoading, fetchItems, items.length]
   );
 
   useEffect(() => {
@@ -105,33 +109,33 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
   }
 
   return (
-    <div className="mb-8">
+    <div className="mb-2">
       {title && <h2 className="text-2xl font-bold mb-2">{title}</h2>}
-      <div className="flex flex-col md:flex-row md:space-x-2 mb-4">
-        {setTimeWindow && timeWindow ? (
+      <div className="flex flex-col md:flex-row md:space-x-2">
+        {setMediaType && (
           <Tabs value={mediaType} onValueChange={(value) => setMediaType(value as 'movie' | 'tv')} className="mb-4 md:mb-0">
             <TabsList>
               <TabsTrigger value="movie">Movies</TabsTrigger>
               <TabsTrigger value="tv">TV Shows</TabsTrigger>
             </TabsList>
           </Tabs>
-        ) : null}
-        {setTimeWindow && timeWindow ? (
+        )}
+        {setTimeWindow && timeWindow && (
           <Tabs value={timeWindow} onValueChange={(value) => setTimeWindow(value as 'day' | 'week')}>
             <TabsList>
               <TabsTrigger value="day">Today</TabsTrigger>
               <TabsTrigger value="week">This Week</TabsTrigger>
             </TabsList>
           </Tabs>
-        ) : null}
-        {setListType && listType ? (
+        )}
+        {setListType && listType && (
           <Tabs value={listType} onValueChange={(value) => setListType(value as 'popular' | 'top_rated')}>
             <TabsList>
               <TabsTrigger value="popular">Popular</TabsTrigger>
               <TabsTrigger value="top_rated">Top Rated</TabsTrigger>
             </TabsList>
           </Tabs>
-        ) : null}
+        )}
       </div>
       <div
         className="overflow-x-auto py-6 cursor-grab active:cursor-grabbing"

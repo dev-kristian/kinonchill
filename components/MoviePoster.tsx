@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -11,14 +11,21 @@ interface MoviePosterProps {
   movie: Movie;
   showMediaType?: boolean;
 }
+
 const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false }) => {
   const router = useRouter();
   const { user } = useAuthContext();
   const { userData, isLoading: isUserDataLoading, addToWatchlist, removeFromWatchlist } = useUserData();
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
 
   const mediaType = movie.media_type as 'movie' | 'tv';
-  const isInWatchlist = userData?.watchlist[mediaType]?.[movie.id.toString()] || false;
+
+  useEffect(() => {
+    if (userData && userData.watchlist) {
+      setIsInWatchlist(!!userData.watchlist[mediaType]?.[movie.id.toString()]);
+    }
+  }, [userData, mediaType, movie.id]);
 
   const handleToggleWatchlist = async () => {
     if (!user) {
@@ -30,6 +37,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
     try {
       if (isInWatchlist) {
         await removeFromWatchlist(movie.id, mediaType);
+        setIsInWatchlist(false);
       } else {
         const movieDetails = {
           id: movie.id,
@@ -40,6 +48,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
           media_type: mediaType,
         };
         await addToWatchlist(movieDetails, mediaType);
+        setIsInWatchlist(true);
       }
     } catch (error) {
       console.error('Error updating watchlist status:', error);
@@ -77,12 +86,13 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
       <div className="relative aspect-[2/3]">
         {imagePath ? (
           <Image
-            src={`https://image.tmdb.org/t/p/w500${imagePath}`}
-            alt={title}
-            layout="fill"
-            objectFit="cover"
-            className="rounded-t-xl"
-          />
+          src={`https://image.tmdb.org/t/p/w500${imagePath}`}
+          alt={title}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          priority
+          className="rounded-t-xl object-cover"
+        />
         ) : (
           <div className="w-full h-full bg-secondary flex items-center justify-center">
             <span className="text-foreground text-lg">No Image</span>

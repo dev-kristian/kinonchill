@@ -1,7 +1,7 @@
 // context/PopularContext.tsx
 'use client'
 
-import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
+import React, { createContext, useState, useContext, useCallback, useEffect, useRef } from 'react';
 import { collection, query, limit, getDocs, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -46,43 +46,64 @@ export const PopularProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFetching, setIsFetching] = useState({ movie: false, tv: false });
+  const popularItemsRef = useRef(popularItems);
+
+  useEffect(() => {
+    popularItemsRef.current = popularItems;
+  }, [popularItems]);
 
   const fetchPopularItems = useCallback(async (mediaType: 'movie' | 'tv') => {
-    if (popularItems[mediaType].length > 0) return; // If we already have data, don't fetch again
-
+    if (popularItemsRef.current[mediaType].length > 0 || isFetching[mediaType]) return;
+  
+    setIsFetching(prev => ({ ...prev, [mediaType]: true }));
     try {
       setIsLoading(true);
       setError(null);
-      const itemsQuery = query(
-        collection(db, mediaType === 'movie' ? 'movies' : 'tvShows'),
-        where('vote_average', '>', 0),
-        where('watchlist_count', '>', 0),
-        limit(20)
-      );
-
-      const snapshot = await getDocs(itemsQuery);
-      const items = snapshot.docs.map(doc => {
-        const data = doc.data();
-        const weighted_score = (data.vote_average * 1.3) + data.watchlist_count;
-        return { ...data, media_type: mediaType, weighted_score } as PopularItem;
-      });
-
-      // Sort items by weighted score
-      items.sort((a, b) => b.weighted_score - a.weighted_score);
-
-      setPopularItems(prev => ({ ...prev, [mediaType]: items }));
+      
+      const docRef = doc(db, mediaType === 'movie' ? 'movies' : 'tvShows', 'allItems');
+      const docSnap = await getDoc(docRef);
+  
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const items = Object.values(data)
+          .filter((item: any) => 
+            item.media_type === mediaType && 
+            item.vote_average > 0 && 
+            item.watchlist_count > 0
+          )
+          .map((item: any) => ({
+            ...item,
+            weighted_score: (item.vote_average * 1.3) + item.watchlist_count
+          }));
+  
+        // Sort items by weighted score
+        items.sort((a, b) => b.weighted_score - a.weighted_score);
+  
+        // Limit to 20 items
+        const limitedItems = items.slice(0, 20);
+  
+        setPopularItems(prev => ({ ...prev, [mediaType]: limitedItems }));
+      } else {
+        console.log("No such document!");
+      }
     } catch (error) {
       console.error('Error fetching popular items:', error);
       setError('Failed to fetch popular items');
     } finally {
       setIsLoading(false);
+      setIsFetching(prev => ({ ...prev, [mediaType]: false }));
     }
-  }, [popularItems]);
+  }, []);
 
   useEffect(() => {
-    fetchPopularItems('movie');
-    fetchPopularItems('tv');
-  }, [fetchPopularItems]);
+    if (popularItems.movie.length === 0) {
+      fetchPopularItems('movie');
+    }
+    if (popularItems.tv.length === 0) {
+      fetchPopularItems('tv');
+    }
+  }, [fetchPopularItems, popularItems.movie.length, popularItems.tv.length]);
 
   const getWatchlistCount = useCallback(async (id: number, mediaType: 'movie' | 'tv') => {
     try {
