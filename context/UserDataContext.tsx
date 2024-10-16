@@ -4,7 +4,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuthContext } from './AuthContext';
 import { db } from '@/lib/firebase';
 import { 
-  collection, 
   doc, 
   setDoc, 
   onSnapshot, 
@@ -12,7 +11,6 @@ import {
   deleteField, 
   getDoc, 
   serverTimestamp, 
-  Timestamp,
   increment
 } from 'firebase/firestore';
 

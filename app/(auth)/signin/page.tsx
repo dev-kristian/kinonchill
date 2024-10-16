@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
 
@@ -67,23 +68,30 @@ export default function SignIn() {
       });
   
       router.push('/');
-    } catch (error: any) {
-      if (error.code === 'auth/email-already-in-use') {
-        // If the email is already in use, try to sign in
-        try {
-          await signInWithEmailAndPassword(auth, email, password);
-          router.push('/');
-        } catch (signInError: any) {
-          if (signInError.code === 'auth/wrong-password') {
-            setError('Invalid username or password. Please try again.');
-          } else {
-            setError('Failed to sign in. Please try again.');
-            console.error('Error signing in:', signInError);
+    } catch (error: unknown) {
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/email-already-in-use') {
+          // If the email is already in use, try to sign in
+          try {
+            await signInWithEmailAndPassword(auth, email, password);
+            router.push('/');
+          } catch (signInError: unknown) {
+            if (signInError instanceof FirebaseError) {
+              if (signInError.code === 'auth/wrong-password') {
+                setError('Invalid username or password. Please try again.');
+              } else {
+                setError('Failed to sign in. Please try again.');
+                console.error('Error signing in:', signInError);
+              }
+            }
           }
+        } else {
+          setError('Failed to create account. Please try again.');
+          console.error('Error creating account:', error);
         }
       } else {
-        setError('Failed to create account. Please try again.');
-        console.error('Error creating account:', error);
+        setError('An unexpected error occurred. Please try again.');
+        console.error('Unexpected error:', error);
       }
     }
   };

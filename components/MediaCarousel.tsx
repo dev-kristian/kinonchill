@@ -82,14 +82,16 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
     const observer = new IntersectionObserver(handleObserver, {
       threshold: 0.1,
     });
-
-    if (sentinelRef.current) {
-      observer.observe(sentinelRef.current);
+  
+    const currentSentinelRef = sentinelRef.current;
+  
+    if (currentSentinelRef) {
+      observer.observe(currentSentinelRef);
     }
-
+  
     return () => {
-      if (sentinelRef.current) {
-        observer.unobserve(sentinelRef.current);
+      if (currentSentinelRef) {
+        observer.unobserve(currentSentinelRef);
       }
     };
   }, [handleObserver]);

@@ -2,7 +2,7 @@
 'use client'
 
 import React, { createContext, useState, useContext, useCallback, useEffect, useRef } from 'react';
-import { collection, query, limit, getDocs, where, doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc ,DocumentData} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface PopularItem {
@@ -67,12 +67,12 @@ export const PopularProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (docSnap.exists()) {
         const data = docSnap.data();
         const items = Object.values(data)
-          .filter((item: any) => 
+          .filter((item: DocumentData) => 
             item.media_type === mediaType && 
             item.vote_average > 0 && 
             item.watchlist_count > 0
           )
-          .map((item: any) => ({
+          .map((item: DocumentData) => ({
             ...item,
             weighted_score: (item.vote_average * 1.3) + item.watchlist_count
           }));
@@ -81,7 +81,7 @@ export const PopularProvider: React.FC<{ children: React.ReactNode }> = ({ child
         items.sort((a, b) => b.weighted_score - a.weighted_score);
   
         // Limit to 20 items
-        const limitedItems = items.slice(0, 20);
+        const limitedItems = items.slice(0, 20) as PopularItem[];
   
         setPopularItems(prev => ({ ...prev, [mediaType]: limitedItems }));
       } else {
@@ -94,8 +94,7 @@ export const PopularProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setIsLoading(false);
       setIsFetching(prev => ({ ...prev, [mediaType]: false }));
     }
-  }, []);
-
+  }, [isFetching]);
   useEffect(() => {
     if (popularItems.movie.length === 0) {
       fetchPopularItems('movie');
