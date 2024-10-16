@@ -7,6 +7,8 @@ import { UserDataProvider } from '@/context/UserDataContext'
 import { SearchProvider } from '@/context/SearchContext'
 import { TrendingProvider } from '@/context/TrendingContext'
 import { PopularProvider } from '@/context/PopularContext'
+import { PollProvider } from '@/context/PollContext'
+import { ViewProvider } from '@/context/ViewContext'
 
 function RootLayout({
   children,
@@ -14,20 +16,24 @@ function RootLayout({
   children: React.ReactNode
 }) {
   return (
+    <ViewProvider>
     <UserDataProvider>
       <SearchProvider>
         <PopularProvider>
           <TrendingProvider>
+            <PollProvider>
           <div className="flex flex-col min-h-screen ">
             <Navigation />
             <main className="flex-grow ">
               {children}
             </main>
             </div>
+            </PollProvider>
           </TrendingProvider>
         </PopularProvider>
       </SearchProvider>
     </UserDataProvider>
+    </ViewProvider>
   )
 }
 

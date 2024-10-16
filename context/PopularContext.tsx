@@ -5,7 +5,7 @@ import React, { createContext, useState, useContext, useCallback, useEffect, use
 import { doc, getDoc ,DocumentData} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-interface PopularItem {
+export interface PopularItem {
   id: number;
   title?: string;
   name?: string;
