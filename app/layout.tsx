@@ -1,5 +1,3 @@
-//app/layout.tsx
-
 import '@/styles/globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
@@ -10,6 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Kino & Chill',
   description: 'Track and share movies with friends',
+  manifest: '/manifest.json',
   icons: {
     icon: '/icons/popcorn.svg',
     apple: '/icons/popcorn.svg',
@@ -23,6 +22,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body className={`${inter.className} bg-background text-foreground`}>
         <AuthProvider>
           {children}

@@ -111,9 +111,9 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
   }
 
   return (
-    <div className="bg-black/40 text-white px-4 py-2  rounded-3xl shadow-lg">
-      {title && <h2 className="md:text-2xl font-bold mb-2">{title}</h2>}
-      <div className="flex flex-col md:flex-row md:space-x-2">
+    <div className="bg-gray-900/50 text-white py-2  rounded-3xl shadow-lg my-2">
+      {title && <h2 className="md:text-2xl font-bold mb-2 px-4">{title}</h2>}
+      <div className="flex flex-col md:flex-row md:space-x-2 px-2">
         {setMediaType && (
           <Tabs value={mediaType} onValueChange={(value) => setMediaType(value as 'movie' | 'tv')} className="mb-4 md:mb-0">
             <TabsList>
@@ -140,7 +140,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
         )}
       </div>
       <div
-        className="overflow-x-auto md:p-2 cursor-grab active:cursor-grabbing"
+        className="overflow-x-auto md:p-2 cursor-grab active:cursor-grabbing no-scrollbar"
         ref={containerRef}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}

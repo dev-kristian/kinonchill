@@ -34,7 +34,7 @@ const DetailInfo: React.FC<DetailInfoProps> = ({
   episodes
 }) => {
   const getScoreColor = (score: number): string => {
-    if (score >= 8) return 'bg-green-500';
+    if (score >= 7) return 'bg-green-500';
     if (score >= 6) return 'bg-yellow-500';
     return 'bg-red-500';
   };

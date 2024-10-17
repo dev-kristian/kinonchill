@@ -23,7 +23,7 @@ export function WithAuth<T extends object>(Component: React.ComponentType<T>) {
     }, [user, loading, router, pathname]);
 
     if (loading) {
-      return <div>Loading...</div>; // You can replace this with a proper loading component
+      return <div>Loading...</div>; 
     }
 
     if (!user && pathname !== '/signin') {

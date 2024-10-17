@@ -1,0 +1,24 @@
+{
+  "name": "Kino & Chill",
+  "short_name": "Kino & Chill",
+  "display": "standalone",
+  "start_url": "/",
+  "theme_color": "#170014",
+  "background_color": "#170014",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "gcm_sender_id": "904976281790",
+  "apple-mobile-web-app-capable": "yes",
+  "apple-mobile-web-app-status-bar-style": "pink",
+  "apple-mobile-web-app-title": "Kino & Chill"
+}

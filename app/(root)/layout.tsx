@@ -9,7 +9,7 @@ import { TrendingProvider } from '@/context/TrendingContext'
 import { PopularProvider } from '@/context/PopularContext'
 import { PollProvider } from '@/context/PollContext'
 import { ViewProvider } from '@/context/ViewContext'
-
+import { Toaster } from '@/components/ui/toaster'
 function RootLayout({
   children,
 }: {
@@ -26,6 +26,7 @@ function RootLayout({
             <Navigation />
             <main className="flex-grow ">
               {children}
+              <Toaster />
             </main>
             </div>
             </PollProvider>

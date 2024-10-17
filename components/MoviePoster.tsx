@@ -113,8 +113,8 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
           )}
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <h2 className="text-lg font-semibold text-white mb-1 truncate">{title}</h2>
+        <div className="absolute bottom-0 left-0 right-0 p-2">
+          <h2 className="text-lg font-semibold text-white mb-1">{title}</h2>
           {releaseDate && (
             <span className="text-sm text-gray-300">
               {new Date(releaseDate).getFullYear()}
@@ -123,7 +123,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
         </div>
       </div>
 
-      <div className="bg-background-light flex justify-between items-center px-2 py-1" onClick={handleWatchlistContainerClick}>
+      <div className="bg-black/80  flex justify-between items-center px-2 py-1" onClick={handleWatchlistContainerClick}>
         {movie.watchlist_count !== undefined && movie.watchlist_count > 0 ? (
           <div className="flex items-center space-x-1">
             <Users className="text-muted-foreground" />
