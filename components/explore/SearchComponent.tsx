@@ -51,7 +51,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ className }) => {
           />
           <Button 
             type="submit" 
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary-hover text-primary-foreground transition-all duration-300 rounded-full px-2 md:px-4"
+            className="absolute right-0 top-1/2 transform -translate-y-1/2  bg-primary/50 hover:bg-primary/70 text-primary-foreground transition-all duration-300 rounded-full px-2 md:px-4"
           >
             <Search className="w-4 h-4" />
             <span className="ml-2 text-sm">Search</span>
@@ -77,7 +77,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ className }) => {
                     setSearchQuery(suggestion);
                     inputRef.current?.focus();
                   }}
-                  className="px-2 py-1 bg-background-light text-muted-foreground rounded-full text-xs hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
+                  className="px-2 py-1 bg-background-light text-muted-foreground hover:bg-primary/70 rounded-full text-xs hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
                 >
                   {suggestion}
                 </button>

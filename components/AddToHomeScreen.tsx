@@ -1,42 +1,16 @@
-'use client'
+// components/AddToHomeScreen.tsx
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 
 const AddToHomeScreen = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-
-  useEffect(() => {
-    const handler = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    window.addEventListener('beforeinstallprompt', handler);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-    };
-  }, []);
-
-  const handleAddToHomeScreen = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
-      }
-      setDeferredPrompt(null);
-    }
+  const showInstructions = () => {
+    alert("To add this app to your home screen and enable notifications:\n\n1. Tap the share button at the bottom of your screen\n2. Scroll down and tap 'Add to Home Screen'\n3. Tap 'Add' in the top right corner\n4. Once added, open the app from your home screen to enable notifications");
   };
 
-  if (!deferredPrompt) return null;
-
   return (
-    <Button onClick={handleAddToHomeScreen}>
-      Add to Home Screen
+    <Button onClick={showInstructions}>
+      How to Add to Home Screen
     </Button>
   );
 };

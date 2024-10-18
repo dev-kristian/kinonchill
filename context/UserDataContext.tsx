@@ -20,6 +20,7 @@ interface UserData {
     movie: { [movieId: string]: boolean };
     tv: { [tvId: string]: boolean };
   };
+  notification?: 'allowed' | 'denied' | 'unsupported';
 }
 
 interface MovieTVDetails {
@@ -37,6 +38,7 @@ interface UserDataContextType {
   isLoading: boolean;
   addToWatchlist: (item: MovieTVDetails, mediaType: 'movie' | 'tv') => Promise<void>;
   removeFromWatchlist: (id: number, mediaType: 'movie' | 'tv') => Promise<void>;
+  updateNotificationStatus: (status: 'allowed' | 'denied' | 'unsupported') => Promise<void>;
 }
 
 const UserDataContext = createContext<UserDataContextType | undefined>(undefined);
@@ -72,6 +74,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         setUserData({
           username: userInfo.username,
+          notification: userInfo.notification,
           ...watchlistData
         } as UserData);
       } else {
@@ -82,7 +85,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     return () => unsubscribe();
   }, [user]);
-
+  
   const addToWatchlist = async (item: MovieTVDetails, mediaType: 'movie' | 'tv') => {
     if (!user || !userData) return;
 
@@ -91,10 +94,8 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const itemsDocRef = doc(db, mediaType === 'movie' ? 'movies' : 'tvShows', 'allItems');
 
     try {
-      // Ensure user document exists in the root users collection
       await setDoc(userDocRef, { email: user.email }, { merge: true });
 
-      // Add to user's watchlist
       await setDoc(watchlistDocRef, {
         watchlist: {
           ...userData.watchlist,
@@ -105,18 +106,15 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }, { merge: true });
 
-      // Update the item in the allItems document
       const itemsDoc = await getDoc(itemsDocRef);
       if (itemsDoc.exists()) {
         const itemsData = itemsDoc.data();
         if (itemsData[item.id]) {
-          // If the item exists, increment the watchlist_count
           await updateDoc(itemsDocRef, {
             [`${item.id}.watchlist_count`]: increment(1),
             [`${item.id}.last_updated`]: serverTimestamp()
           });
         } else {
-          // If the item doesn't exist, add it with initial watchlist_count of 1
           await updateDoc(itemsDocRef, {
             [item.id]: {
               ...item,
@@ -141,12 +139,10 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const watchlistDocRef = doc(db, 'users', user.uid, 'userMovieData', 'watchlist');
       const itemsDocRef = doc(db, mediaType === 'movie' ? 'movies' : 'tvShows', 'allItems');
 
-      // Remove from user's watchlist
       await updateDoc(watchlistDocRef, {
         [`watchlist.${mediaType}.${id.toString()}`]: deleteField()
       });
 
-      // Decrement the watchlist_count in the allItems document
       await updateDoc(itemsDocRef, {
         [`${id}.watchlist_count`]: increment(-1),
         [`${id}.last_updated`]: serverTimestamp()
@@ -158,8 +154,29 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const updateNotificationStatus = async (status: 'allowed' | 'denied' | 'unsupported') => {
+    if (user) {
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, {
+          notification: status
+        }, { merge: true });
+        console.log(`Notification status updated to: ${status}`);
+        
+        // Update local state
+        setUserData(prevData => prevData ? {...prevData, notification: status} : null);
+      } catch (error) {
+        console.error("Error updating notification status:", error);
+        throw error;
+      }
+    } else {
+      console.log("User not logged in. Cannot update notification status.");
+      throw new Error("User not logged in");
+    }
+  };
+
   return (
-    <UserDataContext.Provider value={{ userData, isLoading, addToWatchlist, removeFromWatchlist }}>
+    <UserDataContext.Provider value={{ userData, isLoading, addToWatchlist, removeFromWatchlist, updateNotificationStatus }}>
       {children}
     </UserDataContext.Provider>
   );

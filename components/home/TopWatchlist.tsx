@@ -34,9 +34,9 @@ const TopWatchlist: React.FC = () => {
   }
 
   return (
-    <Card className="bg-gray-950/80 text-white p-2 rounded-lg shadow-lg border-none">
+    <Card className="bg-gray-950/80 text-white p-2 rounded-lg shadow-lg border-none mb-6 md:mb-0">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-gradient">Top Watchlist</h2>
+        <h2 className="text-2xl font-bold text-white">Top Watchlist</h2>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>

@@ -10,7 +10,14 @@ export default function Explore() {
   return (
     <div className="container-6xl mx-2 md:mx-6 mt-4">
       <AnimatedTitle>
-        Explore Movies and TV Shows
+        {(className) => (
+          <>
+            <span className={className}>Explore </span>
+            <span className="text-primary/50">Movies</span>
+            <span className={className}> and </span>
+            <span className="text-primary/50">TV Shows</span>
+          </>
+        )}
       </AnimatedTitle>
       <SearchComponent className="mb-8" />
       <TrendingSection />
