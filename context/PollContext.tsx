@@ -3,10 +3,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, Timestamp, doc, updateDoc, onSnapshot, deleteDoc, increment, query, orderBy } from 'firebase/firestore';
 import { useAuthContext } from './AuthContext';
-import { usePopular } from './PopularContext';
+import { useTopWatchlist } from '@/context/TopWatchlistContext';
 import { useView } from './ViewContext';
-// Import or define the PopularItem type
-import { PopularItem } from './PopularContext'; // Adjust the import path as needed
+// Import or define the TopWatchlistItem type
+import { TopWatchlistItem } from '@/context/TopWatchlistContext'; // Adjust the import path as needed
 
 export interface Poll {
     id: string;
@@ -26,7 +26,7 @@ export interface Poll {
     votePoll: (pollId: string, optionIndex: number, username: string) => Promise<void>;
     deletePoll: (pollId: string) => Promise<void>;
     updatePoll: (pollId: string, newOptions: string[]) => Promise<void>;
-    popularItems: PopularItem[];
+    topWatchlistItems: TopWatchlistItem[];
   }
 
 const PollContext = createContext<PollContextType | undefined>(undefined);
@@ -44,10 +44,10 @@ export const PollProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [polls, setPolls] = useState<Poll[]>([]);
     const { initialPollsCount } = useView();
   const { user } = useAuthContext();
-  const { popularItems: popularItemsObj } = usePopular();
+  const { topWatchlistItems: topWatchlistItemsObj } = useTopWatchlist();
 
-  // Convert the popularItems object to an array
-  const popularItems = [...popularItemsObj.movie, ...popularItemsObj.tv];
+  // Convert the topWatchlistItems object to an array
+  const topWatchlistItems = [...topWatchlistItemsObj.movie, ...topWatchlistItemsObj.tv];
 
   useEffect(() => {
     const pollsRef = collection(db, 'polls');
@@ -130,7 +130,7 @@ export const PollProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <PollContext.Provider value={{ polls, allPolls, loadMorePolls, createPoll, votePoll, deletePoll, updatePoll, popularItems }}>
+    <PollContext.Provider value={{ polls, allPolls, loadMorePolls, createPoll, votePoll, deletePoll, updatePoll, topWatchlistItems }}>
       {children}
     </PollContext.Provider>
   );

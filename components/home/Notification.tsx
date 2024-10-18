@@ -2,10 +2,10 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
-import { requestForToken, onMessageListener } from '../lib/firebaseMessaging';
+import { requestForToken, onMessageListener } from '../../lib/firebaseMessaging';
 import { useToast } from "@/hooks/use-toast"
 import { Button } from '@/components/ui/button';
-import AddToHomeScreen from './AddToHomeScreen';
+import AddToHomeScreen from '../AddToHomeScreen';
 
 const Notification = () => {
   const { toast } = useToast()

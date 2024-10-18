@@ -2,10 +2,10 @@
 'use client'
 
 import React from 'react';
-import PopularSection from '@/components/PopularSection';
+import TopWatchlistSection from '@/components/home/TopWatchlistSection';
 import AnimatedTitle from '@/components/AnimatedTitle';
-import PollSection from '@/components/PollSection';
-import Notification from '@/components/Notification';
+import PollSection from '@/components/home/PollSection';
+import Notification from '@/components/home/Notification';
 import { useUserData } from '@/context/UserDataContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
@@ -48,7 +48,7 @@ export default function Home() {
   };
 
   return (
-    <div className="container-6xl mx-2 md:mx-4 mt-2">
+    <div className="container-6xl px-2 md:px-4 pt-2 pb-8 ">
       <Notification />
       {isLoading ? (
         <p>Loading...</p>
@@ -64,7 +64,7 @@ export default function Home() {
       <Button onClick={sendNotification} className="mt-4">
         Send Notification to All Users
       </Button>
-      <PopularSection />
+      <TopWatchlistSection />
       <PollSection />
     </div>
   )

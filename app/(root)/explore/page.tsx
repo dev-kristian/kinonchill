@@ -1,9 +1,9 @@
 'use client'
 import React from 'react';
-import SearchComponent from '@/components/SearchComponent';
-import TrendingSection from '@/components/TrendingSection';
-import MovieListSection from '@/components/MovieListSection';
-import TvListSection from '@/components/TvListSection';
+import SearchComponent from '@/components/explore/SearchComponent';
+import TrendingSection from '@/components/explore/TrendingSection';
+import MovieListSection from '@/components/explore/MovieListSection';
+import TvListSection from '@/components/explore/TvListSection';
 import AnimatedTitle from '@/components/AnimatedTitle';
 
 export default function Explore() {

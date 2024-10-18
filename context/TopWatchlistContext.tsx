@@ -1,11 +1,11 @@
-// context/PopularContext.tsx
+// context/TopWatchlistContext.tsx
 'use client'
 
 import React, { createContext, useState, useContext, useCallback, useEffect, useRef } from 'react';
 import { doc, getDoc ,DocumentData} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-export interface PopularItem {
+export interface TopWatchlistItem {
   id: number;
   title?: string;
   name?: string;
@@ -18,43 +18,43 @@ export interface PopularItem {
   weighted_score: number;
 }
 
-interface PopularContextType {
-  popularItems: {
-    movie: PopularItem[];
-    tv: PopularItem[];
+interface TopWatchlistContextType {
+  topWatchlistItems: {
+    movie: TopWatchlistItem[];
+    tv: TopWatchlistItem[];
   };
   isLoading: boolean;
   error: string | null;
-  fetchPopularItems: (mediaType: 'movie' | 'tv') => Promise<void>;
+  fetchTopWatchlistItems: (mediaType: 'movie' | 'tv') => Promise<void>;
   getWatchlistCount: (id: number, mediaType: 'movie' | 'tv') => Promise<number>;
 }
 
-const PopularContext = createContext<PopularContextType | undefined>(undefined);
+const TopWatchlistContext = createContext<TopWatchlistContextType | undefined>(undefined);
 
-export const usePopular = () => {
-  const context = useContext(PopularContext);
+export const useTopWatchlist = () => {
+  const context = useContext(TopWatchlistContext);
   if (!context) {
-    throw new Error('usePopular must be used within a PopularProvider');
+    throw new Error('useTopWatchlist must be used within a TopWatchlistProvider');
   }
   return context;
 };
 
-export const PopularProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [popularItems, setPopularItems] = useState<{ movie: PopularItem[]; tv: PopularItem[] }>({
+export const TopWatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [topWatchlistItems, setTopWatchlistItems] = useState<{ movie: TopWatchlistItem[]; tv: TopWatchlistItem[] }>({
     movie: [],
     tv: [],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFetching, setIsFetching] = useState({ movie: false, tv: false });
-  const popularItemsRef = useRef(popularItems);
+  const topWatchlistItemsRef = useRef(topWatchlistItems);
 
   useEffect(() => {
-    popularItemsRef.current = popularItems;
-  }, [popularItems]);
+    topWatchlistItemsRef.current = topWatchlistItems;
+  }, [topWatchlistItems]);
 
-  const fetchPopularItems = useCallback(async (mediaType: 'movie' | 'tv') => {
-    if (popularItemsRef.current[mediaType].length > 0 || isFetching[mediaType]) return;
+  const fetchTopWatchlistItems = useCallback(async (mediaType: 'movie' | 'tv') => {
+    if (topWatchlistItemsRef.current[mediaType].length > 0 || isFetching[mediaType]) return;
   
     setIsFetching(prev => ({ ...prev, [mediaType]: true }));
     try {
@@ -81,28 +81,28 @@ export const PopularProvider: React.FC<{ children: React.ReactNode }> = ({ child
         items.sort((a, b) => b.weighted_score - a.weighted_score);
   
         // Limit to 20 items
-        const limitedItems = items.slice(0, 20) as PopularItem[];
+        const limitedItems = items.slice(0, 20) as TopWatchlistItem[];
   
-        setPopularItems(prev => ({ ...prev, [mediaType]: limitedItems }));
+        setTopWatchlistItems(prev => ({ ...prev, [mediaType]: limitedItems }));
       } else {
         console.log("No such document!");
       }
     } catch (error) {
-      console.error('Error fetching popular items:', error);
-      setError('Failed to fetch popular items');
+      console.error('Error fetching topWatchlist items:', error);
+      setError('Failed to fetch topWatchlist items');
     } finally {
       setIsLoading(false);
       setIsFetching(prev => ({ ...prev, [mediaType]: false }));
     }
   }, [isFetching]);
   useEffect(() => {
-    if (popularItems.movie.length === 0) {
-      fetchPopularItems('movie');
+    if (topWatchlistItems.movie.length === 0) {
+      fetchTopWatchlistItems('movie');
     }
-    if (popularItems.tv.length === 0) {
-      fetchPopularItems('tv');
+    if (topWatchlistItems.tv.length === 0) {
+      fetchTopWatchlistItems('tv');
     }
-  }, [fetchPopularItems, popularItems.movie.length, popularItems.tv.length]);
+  }, [fetchTopWatchlistItems, topWatchlistItems.movie.length, topWatchlistItems.tv.length]);
 
   const getWatchlistCount = useCallback(async (id: number, mediaType: 'movie' | 'tv') => {
     try {
@@ -119,14 +119,14 @@ export const PopularProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   return (
-    <PopularContext.Provider value={{ 
-      popularItems, 
+    <TopWatchlistContext.Provider value={{ 
+      topWatchlistItems, 
       isLoading, 
       error, 
-      fetchPopularItems,
+      fetchTopWatchlistItems,
       getWatchlistCount
     }}>
       {children}
-    </PopularContext.Provider>
+    </TopWatchlistContext.Provider>
   );
 };

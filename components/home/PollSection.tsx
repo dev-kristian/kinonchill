@@ -7,16 +7,16 @@ import { FaPlus, FaCheck, FaTimes, FaChartBar, FaClock, FaTrash, FaEdit } from '
 import { formatDistanceToNow } from 'date-fns';
 import { Timestamp } from 'firebase/firestore';
 import { useAuthContext } from '@/context/AuthContext';
-import { Input } from './ui/input';
-import { usePopular, PopularItem } from '@/context/PopularContext';
+import { Input } from '@/components/ui/input';
+import { useTopWatchlist, TopWatchlistItem } from '@/context/TopWatchlistContext';
 
 const PollSection: React.FC = () => {
     const { polls, allPolls, loadMorePolls, createPoll, votePoll, deletePoll, updatePoll } = usePoll();
     const { userData } = useUserData();
     const { user } = useAuthContext();
-    const { popularItems } = usePopular();
-    const allPopularItems = [...popularItems.movie, ...popularItems.tv];
-    const [suggestions, setSuggestions] = useState<PopularItem[]>([]);
+    const { topWatchlistItems } = useTopWatchlist();
+    const allTopWatchlistItems = [...topWatchlistItems.movie, ...topWatchlistItems.tv];
+    const [suggestions, setSuggestions] = useState<TopWatchlistItem[]>([]);
     const [newPollOptions, setNewPollOptions] = useState(['', '']);
     const [focusedOptionIndex, setFocusedOptionIndex] = useState<number | null>(null);
     const [showCreatePoll, setShowCreatePoll] = useState(false);
@@ -57,7 +57,7 @@ const closeCreateEditForm = () => {
     setNewPollOptions(newOptions);
   
     if (value.length > 0) {
-      const filtered = allPopularItems.filter(item => 
+      const filtered = allTopWatchlistItems.filter(item => 
         (item.title || item.name || '').toLowerCase().includes(value.toLowerCase())
       );
       setSuggestions(filtered);
@@ -66,7 +66,7 @@ const closeCreateEditForm = () => {
     }
   };
 
-  const handleSuggestionSelect = (suggestion: PopularItem, index: number) => {
+  const handleSuggestionSelect = (suggestion: TopWatchlistItem, index: number) => {
     const newOptions = [...newPollOptions];
     newOptions[index] = suggestion.title || suggestion.name || '';
     setNewPollOptions(newOptions);

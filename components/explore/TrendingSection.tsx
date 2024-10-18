@@ -1,7 +1,7 @@
 // components/TrendingSection.tsx
 import React from 'react';
 import { useTrending } from '@/context/TrendingContext';
-import MediaCarousel from './MediaCarousel';
+import MediaCarousel from '@/components/MediaCarousel';
 
 const TrendingSection: React.FC = () => {
   const { trendingState, mediaType, timeWindow, setMediaType, setTimeWindow, fetchTrending } = useTrending();

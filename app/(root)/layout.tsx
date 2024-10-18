@@ -6,10 +6,11 @@ import { WithAuth } from '@/components/WithAuth'
 import { UserDataProvider } from '@/context/UserDataContext'
 import { SearchProvider } from '@/context/SearchContext'
 import { TrendingProvider } from '@/context/TrendingContext'
-import { PopularProvider } from '@/context/PopularContext'
+import { TopWatchlistProvider } from '@/context/TopWatchlistContext'
 import { PollProvider } from '@/context/PollContext'
 import { ViewProvider } from '@/context/ViewContext'
 import { Toaster } from '@/components/ui/toaster'
+
 function RootLayout({
   children,
 }: {
@@ -19,7 +20,7 @@ function RootLayout({
     <ViewProvider>
     <UserDataProvider>
       <SearchProvider>
-        <PopularProvider>
+        <TopWatchlistProvider>
           <TrendingProvider>
             <PollProvider>
           <div className="flex flex-col min-h-screen ">
@@ -31,7 +32,7 @@ function RootLayout({
             </div>
             </PollProvider>
           </TrendingProvider>
-        </PopularProvider>
+        </TopWatchlistProvider>
       </SearchProvider>
     </UserDataProvider>
     </ViewProvider>

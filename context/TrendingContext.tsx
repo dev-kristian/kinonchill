@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
-import { usePopular } from './PopularContext';
+import { useTopWatchlist } from '@/context/TopWatchlistContext';
 
 interface Media {
   id: number;
@@ -82,7 +82,7 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     hasMore: true,
   });
 
-  const { getWatchlistCount } = usePopular();
+  const { getWatchlistCount } = useTopWatchlist();
 
   const fetchData = useCallback(async (
     endpoint: string,

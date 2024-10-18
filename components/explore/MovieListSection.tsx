@@ -1,7 +1,7 @@
 // MovieListSection.tsx
 import React from 'react';
 import { useTrending } from '@/context/TrendingContext';
-import MediaCarousel from './MediaCarousel';
+import MediaCarousel from '@/components/MediaCarousel';
 
 const MovieListSection: React.FC = () => {
   const { movieListState, movieListType, setMovieListType, fetchMovieList } = useTrending();

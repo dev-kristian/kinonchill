@@ -33,16 +33,31 @@
     --chart-5: 30 80% 55%;
     --radius: 0.75rem;
   }
-/* Hide scrollbar for Chrome, Safari and Opera */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+  
+  body {
+    background-image: url('/background.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+  
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.96);
+    z-index: -1;
+  }
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
-.no-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
+@layer components {
+  .btn-transparent {
+    @apply bg-transparent hover:bg-transparent text-white hover:text-pink-500 transition-colors duration-300;
+  }
+
   .scroll-container {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
@@ -56,27 +71,27 @@
   .scroll-snap-align {
     scroll-snap-align: start;
   }
-  body {
-    background-image: url('/background.png');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
-  
-  /* Add a semi-transparent overlay to improve text readability */
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.96);
-    z-index: -1;
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
-  @layer components {
-    .btn-transparent {
-      @apply bg-transparent hover:bg-transparent text-white hover:text-pink-500 transition-colors duration-300;
-    }
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  html {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
   }
 }
