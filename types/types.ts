@@ -1,4 +1,5 @@
 // types.ts
+
 export interface Movie {
   id: number;
   title?: string;
@@ -6,10 +7,14 @@ export interface Movie {
   poster_path?: string | null;
   profile_path?: string | null;
   vote_average?: number;
-  media_type?: string;
+  media_type?: 'movie' | 'tv';
   release_date?: string;
   first_air_date?: string;
   watchlist_count?: number;
+}
+
+export interface TVShow extends Movie {
+  first_air_date?: string;
 }
 
 export interface CrewMember {
@@ -55,7 +60,10 @@ export interface DetailsData {
   vote_count: number;
   production_countries: Array<{ name: string }>;
   seasons?: Season[];
+  watchlist_count?: number;
+  media_type: 'movie' | 'tv';
 }
+
 export interface Season {
   air_date: string;
   episode_count: number;
@@ -75,10 +83,15 @@ export interface BestMatch {
   similarity: number;
   href: string;
 }
+
 export interface VideoData {
   id: string;
   key: string;
   name: string;
   site: string;
   type: string;
+}
+
+export interface TopWatchlistItem extends Movie, TVShow {
+  weighted_score: number;
 }

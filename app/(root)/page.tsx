@@ -1,11 +1,10 @@
-//app\(root)\page.tsx
 'use client'
 
 import React from 'react';
-import TopWatchlistSection from '@/components/home/TopWatchlistSection';
 import AnimatedTitle from '@/components/AnimatedTitle';
 import PollSection from '@/components/home/PollSection';
 import Notification from '@/components/home/Notification';
+import TopWatchlist from '@/components/home/TopWatchlist';
 import { useUserData } from '@/context/UserDataContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
@@ -48,24 +47,30 @@ export default function Home() {
   };
 
   return (
-    <div className="container-6xl px-2 md:px-4 pt-2 pb-8 ">
-      <Notification />
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : userData ? (
-        <AnimatedTitle>
-          Welcome, {userData.username}!
-        </AnimatedTitle>
-      ) : (
-        <AnimatedTitle>
-          Welcome to Kino & Cill!
-        </AnimatedTitle>
-      )}
-      <Button onClick={sendNotification} className="mt-4">
-        Send Notification to All Users
-      </Button>
-      <TopWatchlistSection />
-      <PollSection />
+    <div className="container-6xl mx-auto px-4 py-4">
+      <div className="flex flex-col lg:flex-row lg:space-x-8">
+        <div className="w-full lg:w-3/4 mb-8 lg:mb-0">
+          <Notification />
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : userData ? (
+            <AnimatedTitle>
+              Welcome, {userData.username}!
+            </AnimatedTitle>
+          ) : (
+            <AnimatedTitle>
+              Welcome to Kino & Cill!
+            </AnimatedTitle>
+          )}
+          <Button onClick={sendNotification} className="mt-4 mb-8">
+            Send Notification to All Users
+          </Button>
+          <PollSection />
+        </div>
+        <div className="w-full lg:w-1/4">
+          <TopWatchlist />
+        </div>
+      </div>
     </div>
-  )
+  );
 }

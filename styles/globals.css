@@ -94,4 +94,9 @@
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+  .text-gradient {
+    background: linear-gradient(to right, #e2cde7, #f549ea);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }

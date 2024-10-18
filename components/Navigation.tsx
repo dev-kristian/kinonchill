@@ -25,7 +25,7 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="bg-background-light p-4">
+    <nav className=" p-2">
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="text-foreground text-xl font-bold flex items-center">
           <Image 
