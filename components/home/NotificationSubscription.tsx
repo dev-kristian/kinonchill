@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserData } from '@/context/UserDataContext';
 import { requestForToken, onMessageListener } from '@/lib/firebaseMessaging';
 import NotificationSubscriptionUI from './NotificationSubscriptionUI';
-import { Bell, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+
 const NotificationSubscription = () => {
   const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const [isIOS166OrHigher, setIsIOS166OrHigher] = useState(false);

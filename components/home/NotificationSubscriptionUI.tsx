@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import AddToHomeScreen from './AddToHomeScreen';
 import { Bell, AlertTriangle, Info, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -112,7 +111,6 @@ const NotificationSubscriptionUI: React.FC<NotificationSubscriptionUIProps> = ({
               <li>Open the app from your home screen</li>
             </ol>
           )}
-          <AddToHomeScreen />
         </motion.div>
       );
     }

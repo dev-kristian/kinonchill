@@ -16,14 +16,29 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage(function(payload) {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   
-  // Only show notification if the app is in the background
   if (!self.clients.matchAll()) {
     const notificationTitle = payload.notification.title;
     const notificationOptions = {
       body: payload.notification.body,
-      icon: '/icon-192x192.png'
+      icon: payload.notification.icon || '/icon-192x192.png',
+      image: payload.notification.image|| '/icon-512x512.png',
+      vibrate: payload.notification.vibrate|| [200, 100, 200],
+      data: {
+        clickAction: payload.data?.clickAction,
+      },
+      // You can add more options here, like:
+      // badge: '/badge-icon.png',
+      // image: '/large-image.jpg',
+      // vibrate: [200, 100, 200],
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
+  }
+});
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  if (event.notification.data && event.notification.data.clickAction) {
+    clients.openWindow(event.notification.data.clickAction);
   }
 });

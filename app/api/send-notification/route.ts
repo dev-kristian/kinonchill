@@ -14,9 +14,21 @@ if (!admin.apps.length) {
 
 export async function POST(request: Request) {
   try {
-    const { title, body } = await request.json();
+    const { title, body, icon, clickAction, ...otherFields } = await request.json();
     const message = {
-      notification: { title, body },
+      notification: { 
+        title, 
+        body,
+      },
+      webpush: {
+        notification: {
+          icon,
+          ...otherFields,
+        },
+        fcmOptions: {
+          link: clickAction,
+        },
+      },
       topic: 'all',
     };
     const response = await admin.messaging().send(message);
