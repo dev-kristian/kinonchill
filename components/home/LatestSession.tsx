@@ -11,11 +11,31 @@ import { Users, Film, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LatestSession: React.FC = () => {
-  const { latestSession, updateUserDates } = useSession();
+  const { latestSession, updateUserDates, fetchLatestSession } = useSession();
   const { userData } = useUserData();
   const [selectedDates, setSelectedDates] = useState<DateTimeSelection[]>([]);
   const [datePopularity, setDatePopularity] = useState<DatePopularity[]>([]);
   const [showInfo, setShowInfo] = useState(true);
+
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+
+    const setupLatestSession = async () => {
+      try {
+        unsubscribe = await fetchLatestSession();
+      } catch (error) {
+        console.error('Error fetching latest session:', error);
+      }
+    };
+
+    setupLatestSession();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [fetchLatestSession]);
 
   useEffect(() => {
     if (latestSession) {

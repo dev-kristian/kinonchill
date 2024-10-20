@@ -1,6 +1,4 @@
-// components/home/MovieNightCalendar.tsx
-
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { format, addMonths, subMonths, isSameDay, parseISO, isBefore, startOfDay } from 'date-fns';
@@ -23,7 +21,7 @@ export default function MovieNightCalendar({
   onDatesSelected, 
   datePopularity = [],
   activeUsername,
-  userDates = {}  // Provide a default empty object
+  userDates = {}
 }: MovieNightCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -37,32 +35,32 @@ export default function MovieNightCalendar({
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
 
-  const handleDateClick = (day: number) => {
+  const handleDateClick = useCallback((day: number) => {
     const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     setSelectedDate(newDate);
     
-    const existingSelection = selectedDates.find(d => isSameDay(d.date, newDate));
+    const existingSelection = selectedDates.find(d => isSameDay(new Date(d.date), newDate));
     let newSelectedDates: DateTimeSelection[];
 
     if (existingSelection) {
-      newSelectedDates = selectedDates.filter(d => !isSameDay(d.date, newDate));
+      newSelectedDates = selectedDates.filter(d => !isSameDay(new Date(d.date), newDate));
     } else {
       newSelectedDates = [...selectedDates, { date: newDate, hours: 'all' }];
     }
 
     onDatesSelected(newSelectedDates);
-  };
+  }, [currentDate, selectedDates, onDatesSelected]);
 
-  const handleHourClick = (hour: number) => {
+  const handleHourClick = useCallback((hour: number) => {
     if (!selectedDate) return;
   
-    const existingSelection = selectedDates.find(d => isSameDay(d.date, selectedDate));
+    const existingSelection = selectedDates.find(d => isSameDay(new Date(d.date), selectedDate));
     let newSelectedDates: DateTimeSelection[];
   
     if (existingSelection) {
       if (existingSelection.hours === 'all') {
         newSelectedDates = selectedDates.map(d => 
-          isSameDay(d.date, selectedDate) 
+          isSameDay(new Date(d.date), selectedDate) 
             ? { ...d, hours: [hour] } 
             : d
         );
@@ -70,17 +68,17 @@ export default function MovieNightCalendar({
         if (existingSelection.hours.includes(hour)) {
           const newHours = existingSelection.hours.filter(h => h !== hour);
           if (newHours.length === 0) {
-            newSelectedDates = selectedDates.filter(d => !isSameDay(d.date, selectedDate));
+            newSelectedDates = selectedDates.filter(d => !isSameDay(new Date(d.date), selectedDate));
           } else {
             newSelectedDates = selectedDates.map(d => 
-              isSameDay(d.date, selectedDate) 
+              isSameDay(new Date(d.date), selectedDate) 
                 ? { ...d, hours: newHours } 
                 : d
             );
           }
         } else {
           newSelectedDates = selectedDates.map(d => 
-            isSameDay(d.date, selectedDate) 
+            isSameDay(new Date(d.date), selectedDate) 
               ? { ...d, hours: [...d.hours as number[], hour] } 
               : d
           );
@@ -93,17 +91,17 @@ export default function MovieNightCalendar({
     }
   
     onDatesSelected(newSelectedDates);
-  };
+  }, [selectedDate, selectedDates, onDatesSelected]);
 
-  const handlePrevMonth = () => {
+  const handlePrevMonth = useCallback(() => {
     setCurrentDate(prev => subMonths(prev, 1));
-  };
+  }, []);
 
-  const handleNextMonth = () => {
+  const handleNextMonth = useCallback(() => {
     setCurrentDate(prev => addMonths(prev, 1));
-  };
+  }, []);
 
-  const renderCalendar = () => {
+  const renderCalendar = useCallback(() => {
     const daysInMonth = getDaysInMonth(currentDate);
     const firstDayOfMonth = getFirstDayOfMonth(currentDate);
     const days = [];
@@ -117,7 +115,7 @@ export default function MovieNightCalendar({
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i);
       const isPastDate = isBefore(date, today);
       const popularity = datePopularity.find(d => isSameDay(parseISO(d.date), date));
-      const isActiveUserSelected = selectedDates.some(d => isSameDay(d.date, date));
+      const isActiveUserSelected = selectedDates.some(d => isSameDay(new Date(d.date), date));
       
       const otherUsersSelected = Object.entries(userDates).filter(([username, dates]) => 
         username !== activeUsername && dates.some(d => isSameDay(new Date(d.date), date))
@@ -155,12 +153,12 @@ export default function MovieNightCalendar({
     }
 
     return days;
-  };
+  }, [currentDate, datePopularity, selectedDates, userDates, activeUsername, handleDateClick]);
 
-  const renderHours = () => {
+  const renderHours = useCallback(() => {
     if (!selectedDate) return null;
   
-    const selectedDateTimes = selectedDates.find(d => isSameDay(d.date, selectedDate));
+    const selectedDateTimes = selectedDates.find(d => isSameDay(new Date(d.date), selectedDate));
     const popularityForDate = datePopularity.find(d => isSameDay(parseISO(d.date), selectedDate));
   
     return (
@@ -206,7 +204,7 @@ export default function MovieNightCalendar({
         })}
       </div>
     );
-  };
+  }, [selectedDate, selectedDates, datePopularity, userDates, activeUsername, handleHourClick]);
 
   return (
     <div className="mt-2 flex flex-col lg:flex-row space-y-2 lg:space-y-0 lg:space-x-4">

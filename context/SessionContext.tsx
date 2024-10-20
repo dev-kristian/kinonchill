@@ -11,12 +11,13 @@ import {
   limit,
   setDoc,
   updateDoc,
-  getDocs, 
+  onSnapshot,
   serverTimestamp,
   DocumentData,
   Timestamp,
+  Unsubscribe
 } from 'firebase/firestore';
-import { DateTimeSelection } from '@/types/types'; 
+import { DateTimeSelection } from '@/types/types';
 
 interface Poll {
   id: string;
@@ -41,10 +42,10 @@ interface Session {
 interface SessionContextType {
   currentSession: Session | null;
   allSessions: Session[];
-  createSession: (dates: DateTimeSelection[]) => Promise<Session>; 
+  createSession: (dates: DateTimeSelection[]) => Promise<Session>;
   createPoll: (sessionId: string, movieTitles: string[]) => Promise<void>;
   latestSession: Session | null;
-  fetchLatestSession: () => Promise<void>;
+  fetchLatestSession: () => Promise<Unsubscribe | undefined>;
   updateUserDates: (sessionId: string, dates: DateTimeSelection[]) => Promise<void>;
   setLatestSession: React.Dispatch<React.SetStateAction<Session | null>>;
 }
@@ -119,17 +120,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           hours: hours === 'all' ? 'all' : hours.map(h => Timestamp.fromDate(new Date(date.setHours(h))))
         }))
       });
-
-      setLatestSession(prev => prev && prev.id === sessionId ? {
-        ...prev,
-        userDates: {
-          ...prev.userDates,
-          [userData.username]: dates.map(({ date, hours }) => ({
-            date: date.toISOString(),
-            hours: hours === 'all' ? 'all' : hours.map(h => new Date(date.setHours(h)).toISOString())
-          }))
-        }
-      } : prev);
+      // No need to update local state here, as it will be updated by the listener
     } catch (error) {
       console.error("Error updating user dates: ", error);
       throw error;
@@ -178,7 +169,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const fetchLatestSession = useCallback(async () => {
+const fetchLatestSession = useCallback(async (): Promise<Unsubscribe | undefined> => {
     if (!user || !userData) return;
     try {
       const sessionsRef = collection(db, 'sessions');
@@ -188,46 +179,62 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         orderBy('createdAt', 'desc'),
         limit(1)
       );
-      const querySnapshot = await getDocs(q);
-  
-      if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        const data = doc.data() as DocumentData;
-        const session: Session = {
-          id: doc.id,
-          createdAt: data.createdAt.toDate(),
-          createdBy: data.createdBy,
-          userDates: Object.fromEntries(
-            Object.entries(data.userDates).map(([username, dates]) => [
-              username,
-              (dates as { date: Timestamp; hours: Timestamp[] | 'all' }[]).map(({ date, hours }) => ({
-                date: date.toDate().toISOString(),
-                hours: hours === 'all' ? 'all' : (hours as Timestamp[]).map(ts => ts.toDate().toISOString())
-              }))
-            ])
-          ),
-          poll: data.poll ? {
-            id: data.poll.id,
-            movieTitles: data.poll.movieTitles,
-            votes: data.poll.votes
-          } : undefined,
-          status: data.status
-        };
-        setLatestSession(session);
-      } else {
-        setLatestSession(null);
-      }
+      
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        if (!querySnapshot.empty) {
+          const doc = querySnapshot.docs[0];
+          const data = doc.data() as DocumentData;
+          const session: Session = {
+            id: doc.id,
+            createdAt: data.createdAt.toDate(),
+            createdBy: data.createdBy,
+            userDates: Object.fromEntries(
+              Object.entries(data.userDates).map(([username, dates]) => [
+                username,
+                (dates as { date: Timestamp; hours: Timestamp[] | 'all' }[]).map(({ date, hours }) => ({
+                  date: date.toDate().toISOString(),
+                  hours: hours === 'all' ? 'all' : (hours as Timestamp[]).map(ts => ts.toDate().toISOString())
+                }))
+              ])
+            ),
+            poll: data.poll ? {
+              id: data.poll.id,
+              movieTitles: data.poll.movieTitles,
+              votes: data.poll.votes
+            } : undefined,
+            status: data.status
+          };
+          setLatestSession(session);
+          setCurrentSession(session);
+        } else {
+          setLatestSession(null);
+          setCurrentSession(null);
+        }
+      });
+
+      return unsubscribe;
     } catch (error) {
       console.error("Error fetching latest active session: ", error);
     }
   }, [user, userData]);
 
   useEffect(() => {
+    let unsubscribe: Unsubscribe | undefined;
+
     if (user && userData) {
-      fetchLatestSession();
+      fetchLatestSession().then((unsub) => {
+        unsubscribe = unsub;
+      });
     } else {
       setLatestSession(null);
+      setCurrentSession(null);
     }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [user, userData, fetchLatestSession]);
 
   return (
