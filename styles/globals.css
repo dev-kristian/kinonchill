@@ -71,6 +71,52 @@
   .scroll-snap-align {
     scroll-snap-align: start;
   }
+  .text-gradient {
+    text-shadow: 0 0 5px rgba(242, 111, 205, 0.5), 0 0 10px rgba(226, 18, 212, 0.3);
+  }
+  .google-text {
+    background: linear-gradient(
+      to right,
+      #4285F4 0%,   /* Google Blue */
+      #EA4335 25%,  /* Google Red */
+      #FBBC05 50%,  /* Google Yellow */
+      #34A853 75%,  /* Google Green */
+      #4285F4 100%  /* Google Blue */
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    background-size: 200% auto;
+    animation: shine 5s linear infinite;
+  }
+  
+  @keyframes shine {
+    to {
+      background-position: 200% center;
+    }
+  }
+
+  .signin-text {
+    background: linear-gradient(
+      to right,
+      white,
+      #ff69b4,  /* Hot Pink */
+      #ff1493,  /* Deep Pink */
+      #ff69b4,
+      white   /* Hot Pink */
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    background-size: 200% auto;
+    animation: shine 3s linear infinite;
+  }
+  
+  @keyframes shine {
+    to {
+      background-position: 200% center;
+    }
+  }
 }
 
 @layer utilities {

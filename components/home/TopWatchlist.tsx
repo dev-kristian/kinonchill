@@ -34,7 +34,7 @@ const TopWatchlist: React.FC = () => {
   }
 
   return (
-    <Card className="bg-gray-950/80 text-white p-2 rounded-lg shadow-lg border-none mb-6 md:mb-0">
+    <Card className="bg-gradient-to-br from-gray-950 to-gray-900 text-white p-2 rounded-2xl shadow-lg border-none mb-6 md:mb-0">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-white">Top Watchlist</h2>
         <TooltipProvider>
@@ -61,24 +61,24 @@ const TopWatchlist: React.FC = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-2"
+          className="space-y-2 "
         >
           {items.map((item: TopWatchlistItem, index: number) => (
             <li
               key={item.id}
-              className="bg-gray-900/80 rounded-lg overflow-hidden hover:bg-gray-700/50 transition-all duration-200"
+              className="bg-gradient-to-l from-gray-800 to-pink-900/50 rounded-lg overflow-hidden hover:bg-gray-700/50 transition-all duration-200 "
             >
               <Link href={`/details/${mediaType}/${item.id}`} className="flex items-center px-2 py-1 space-x-3">
-                <div className="flex-shrink-0 w-12 h-16 relative rounded-md overflow-hidden">
+                <div className="flex-shrink-0 w-12 h-16 relative rounded-md overflow-hidden ">
                   <Image
                     src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
                     alt={item.title || item.name || ''}
                     layout="fill"
                     objectFit="cover"
-                    className="transition-transform duration-300 hover:scale-110"
+                    className="transition-transform duration-300 hover:scale-110 "
                   />
                 </div>
-                <div className="flex-grow min-w-0">
+                <div className="flex-grow min-w-0" >
                   <p className="font-semibold text-sm line-clamp-1">{item.title || item.name}</p>
                   <div className="flex items-center space-x-2 mt-1 text-xs">
                     <span className="flex items-center text-gray-300">
@@ -101,8 +101,7 @@ const TopWatchlist: React.FC = () => {
       </AnimatePresence>
       <Link href="/top-watchlist">
         <Button
-          className="mt-4 w-full bg-primary/50 hover:bg-primary/70 text-white transition-colors duration-200"
-          variant="outline"
+          className="mt-4 w-full bg-transparent hover:bg-transparent text-primary/70 hover:text-primary/70 shadow-none transition-colors duration-200"
         >
           See All
         </Button>

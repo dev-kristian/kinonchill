@@ -8,6 +8,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
+import { FaGoogle, FaUser, FaLock } from 'react-icons/fa';
 
 export default function SignIn() {
   const [username, setUsername] = useState('');
@@ -105,51 +106,65 @@ export default function SignIn() {
   }
 
   return (
-    <div className="text-center">
-      <h1 className="text-3xl font-bold mb-8 text-accent">Sign In to Movie Hub</h1>
-      
-      <form onSubmit={handleUsernameSignIn} className="mb-6">
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-3 py-2 border-none border-transparent bg-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+    <div className="flex items-center justify-center min-h-screen ">
+      <div className="w-full max-w-md space-y-6 bg-transparent p-4 md:p-8 rounded-lg shadow-2xl">
+        <div>
+          <h1 className="text-5xl font-bold mb-2 text-gradient">Kino & Chill</h1>
+          <p className="text-xl text-foreground/80 mb-8">Sign in to your account</p>
         </div>
-        <div className="mb-4">
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border-none border-transparent bg-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+        
+        <form onSubmit={handleUsernameSignIn} className="space-y-4">
+          <div className="relative">
+            <FaUser className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition duration-300"
+            />
+          </div>
+          <div className="relative">
+            <FaLock className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition duration-300"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full flex items-center justify-center bg-transparent border border-gray-600 hover:bg-gray-900/20 text-white font-bold py-3 rounded-md transition duration-300 transform hover:scale-105 "
+          >
+            <span className="relative z-10 signin-text">Sign In / Sign Up</span>
+            <div className="absolute inset-0 h-full w-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left bg-gradient-to-r from-pink-500 via-pink-400 to-pink-500 opacity-50"></div>
+          </button>
+        </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-700"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-transparent text-foreground">
+              Or continue with
+            </span>
+          </div>
         </div>
+
         <button
-          type="submit"
-          className="w-full bg-primary hover:bg-primary-hover text-foreground font-bold py-2 px-4 rounded transition duration-300"
+          onClick={handleGoogleSignIn}
+          className="w-full flex items-center justify-center bg-transparent border border-gray-600 hover:bg-gray-900/20 text-white font-bold py-3 rounded-md transition duration-300 transform hover:scale-105 "
         >
-          Sign In / Sign Up
+          <FaGoogle className="mr-2" />
+          <span className="">Sign in with</span>
+          <span className="google-text">&nbsp;Google</span>
         </button>
-      </form>
-
-      <div className="relative">
-        <hr className="my-8" />
-        <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background px-4 text-sm text-gray-500">
-          OR
-        </span>
+        
+        {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
       </div>
-
-      <button
-        onClick={handleGoogleSignIn}
-        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-      >
-        Sign in with Google
-      </button>
-      
-      {error && <p className="text-red-500 mt-4">{error}</p>}
     </div>
   );
 }

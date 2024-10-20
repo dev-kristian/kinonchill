@@ -79,7 +79,7 @@ export default function MovieNightInvitation() {
     if (value.length > 1) {
       const movieSuggestions = topWatchlistItems.movie
         .filter(item => item.title?.toLowerCase().includes(value.toLowerCase()))
-        .slice(0, 5); // Limit to 5 suggestions
+        .slice(0, 3); // Limit to 5 suggestions
   
       setSuggestions(movieSuggestions);
     } else {
@@ -162,46 +162,48 @@ export default function MovieNightInvitation() {
       <h3 className="text-xl font-semibold mb-4 flex items-center">
         <FiFilm className="mr-2" /> Create Movie Poll (Optional)
       </h3>
-          <div ref={inputContainerRef} className="flex flex-row space-y-2 mb-4 relative items-center">
-            <Input 
-              value={newMovieTitle} 
-              onChange={handleInputChange}
-              placeholder="Enter movie title"
-              className="flex-grow"
-            />
-{suggestions.length > 0 && (
-  <ul className="absolute z-10 bg-gray-800 w-full mt-1 rounded-md shadow-lg top-full">
-    {suggestions.map((movie) => (
-      <li 
-        key={movie.id} 
-        className="px-4 py-2 hover:bg-gray-700 cursor-pointer flex items-center"
-        onClick={() => handleSuggestionClick(movie)}
-      >
-        <Image 
-          src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
-          alt={movie.title || ''}
-          width={32}
-          height={48}
-          className="object-cover mr-2"
-        />
-        <span>{movie.title}</span>
-      </li>
-    ))}
-  </ul>
-)}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button onClick={handleAddMovieTitle} className="bg-transparent hover:bg-transparent text-primary/70 md:text-white hover:text-primary/50 shadow-none">
-                    Add Movie
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className='bg-primary/50'>
-                  <p>Add movie to the poll</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+      <div ref={inputContainerRef} className="flex flex-col space-y-2 mb-4 relative">
+  <div className="flex flex-row items-center">
+    <Input 
+      value={newMovieTitle} 
+      onChange={handleInputChange}
+      placeholder="Enter movie title"
+      className="flex-grow"
+    />
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button onClick={handleAddMovieTitle} className="bg-transparent hover:bg-transparent text-primary/70 md:text-white hover:text-primary/50 shadow-none">
+            Add Movie
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent className='bg-primary/50'>
+          <p>Add movie to the poll</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  </div>
+  {suggestions.length > 0 && (
+    <ul className="absolute z-10 bg-gradient-to-b from-gray-800 to-pink-900 w-full mt-1 rounded-md shadow-lg top-full max-h-60 overflow-y-auto">
+      {suggestions.map((movie) => (
+        <li 
+          key={movie.id} 
+          className="px-4 py-2 hover:bg-gray-700 cursor-pointer flex items-center"
+          onClick={() => handleSuggestionClick(movie)}
+        >
+          <Image 
+            src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+            alt={movie.title || ''}
+            width={32}
+            height={48}
+            className="object-cover mr-2"
+          />
+          <span>{movie.title}</span>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
           <AnimatePresence>
           {movieTitles.length > 0 && (
   <motion.ul
@@ -216,7 +218,7 @@ export default function MovieNightInvitation() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 20 }}
-        className="flex items-center justify-between bg-gray-900 p-2 rounded-xl"
+        className="flex items-center justify-between bg-gradient-to-r from-gray-800 to-pink-900/50 p-2 rounded-xl"
       >
         <div className="flex items-center">
           <Image 
@@ -257,26 +259,44 @@ export default function MovieNightInvitation() {
         </div>
       </div>
 
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              onClick={completeSession} 
-              className="w-full py-6 text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 hover:bg-gradient-to-r hover:from-purple-300 hover:to-pink-500 shadow-none transition-all duration-300"
-            >
-              <FiSend className="mr-2 text-primary/50" /> Start Session
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Create the movie night session</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <div className="flex justify-between items-center mt-4">
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button 
+          onClick={() => setShowCalendar(false)} 
+          className="py-6 text-lg font-semibold bg-transparent hover:bg-transparent text-white hover:text-primary/70 transition-all duration-300"
+        >
+          Cancel
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>Cancel session creation</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button 
+          onClick={completeSession} 
+          className="py-6 text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 hover:bg-gradient-to-r hover:from-purple-300 hover:to-pink-500 shadow-none transition-all duration-300"
+        >
+          <FiSend className="mr-2 text-primary/50" /> Start Session
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>Create the movie night session</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+</div>
     </motion.div>
   );
 
   return (
-    <div className="bg-gradient-to-br from-gray-950 to-gray-900 p-1 rounded-lg shadow-xl mx-auto">
+    <div className="bg-gradient-to-br from-gray-950 to-gray-900 p-2 rounded-2xl shadow-xl mx-auto">
       {!latestSession && !showCalendar ? (
         <motion.div
           initial={{ opacity: 0 }}

@@ -7,7 +7,6 @@ import { UserDataProvider } from '@/context/UserDataContext'
 import { SearchProvider } from '@/context/SearchContext'
 import { TrendingProvider } from '@/context/TrendingContext'
 import { TopWatchlistProvider } from '@/context/TopWatchlistContext'
-import { PollProvider } from '@/context/PollContext'
 import { ViewProvider } from '@/context/ViewContext'
 import { SessionProvider } from '@/context/SessionContext'
 import { Toaster } from '@/components/ui/toaster'
@@ -23,7 +22,6 @@ function RootLayout({
         <SearchProvider>
           <TopWatchlistProvider>
             <TrendingProvider>
-              <PollProvider>
                 <SessionProvider>
                   <div className="flex flex-col min-h-screen ">
                     <Navigation />
@@ -33,7 +31,6 @@ function RootLayout({
                     </main>
                   </div>
                 </SessionProvider>
-              </PollProvider>
             </TrendingProvider>
           </TopWatchlistProvider>
         </SearchProvider>
