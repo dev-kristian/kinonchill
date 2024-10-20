@@ -5,7 +5,7 @@ import { FaYoutube, FaGlobe, FaImdb } from 'react-icons/fa';
 import { BookmarkMinus, BookmarkPlus } from 'lucide-react';
 
 interface PosterSectionProps {
-  posterPath: string;
+  posterPath: string | null | undefined;
   title: string;
   trailer?: { key: string };
   homepage?: string;
@@ -28,13 +28,19 @@ const PosterSection: React.FC<PosterSectionProps> = ({
   return (
     <div className="w-full md:w-1/3 lg:w-1/4">
       <div className="relative group">
-        <Image
-          src={`https://image.tmdb.org/t/p/w500${posterPath}`}
-          alt={title || 'Poster'}
-          width={500}
-          height={750}
-          className="rounded-lg shadow-2xl transition-transform duration-300"
-        />
+        {posterPath ? (
+          <Image
+            src={`https://image.tmdb.org/t/p/w500${posterPath}`}
+            alt={title || 'Poster'}
+            width={500}
+            height={750}
+            className="rounded-lg shadow-2xl transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-[750px] bg-gray-800 flex items-center justify-center rounded-lg">
+            <span className="text-gray-400">No poster available</span>
+          </div>
+        )}
         {trailer && (
           <>
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hidden md:flex">

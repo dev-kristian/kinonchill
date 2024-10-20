@@ -6,7 +6,7 @@ interface DetailInfoProps {
   title: string;
   releaseYear: string | number;
   genres: string;
-  voteAverage: number;
+  voteAverage: number | undefined;
   voteCount: number;
   tagline?: string;
   overview: string;
@@ -33,7 +33,8 @@ const DetailInfo: React.FC<DetailInfoProps> = ({
   seasons,
   episodes
 }) => {
-  const getScoreColor = (score: number): string => {
+  const getScoreColor = (score: number | undefined): string => {
+    if (score === undefined) return 'bg-gray-500';
     if (score >= 7) return 'bg-green-500';
     if (score >= 6) return 'bg-yellow-500';
     return 'bg-red-500';
@@ -45,8 +46,8 @@ const DetailInfo: React.FC<DetailInfoProps> = ({
         <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-2">{title}</h1>
         <p className="text-lg md:text-xl text-gray-400">{releaseYear} • {genres}</p>
         <div className="flex items-center flex-wrap gap-4 mt-4">
-          <div className={`${getScoreColor(voteAverage)} rounded-2xl px-2 py-1 flex flex-col items-center justify-center`}>
-            <div className="text-3xl font-bold">{voteAverage.toFixed(1)}</div>
+        <div className={`${getScoreColor(voteAverage)} rounded-2xl px-2 py-1 flex flex-col items-center justify-center`}>
+          <div className="text-3xl font-bold">{voteAverage !== undefined ? voteAverage.toFixed(1) : 'N/A'}</div>
             <div className="w-full h-px bg-white opacity-50"></div>
             <div className="flex items-center">
               <FaUsers className="mr-1" />
