@@ -4,19 +4,8 @@
 import React, { createContext, useState, useContext, useCallback, useEffect, useRef } from 'react';
 import { doc, getDoc ,DocumentData} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { TopWatchlistItem } from '@/types/types';
 
-export interface TopWatchlistItem {
-  id: number;
-  title?: string;
-  name?: string;
-  poster_path?: string;
-  vote_average: number;
-  media_type: 'movie' | 'tv';
-  release_date?: string;
-  first_air_date?: string;
-  watchlist_count: number;
-  weighted_score: number;
-}
 
 interface TopWatchlistContextType {
   topWatchlistItems: {

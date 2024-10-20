@@ -1,17 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { useTopWatchlist } from '@/context/TopWatchlistContext';
-
-interface Media {
-  id: number;
-  title?: string;
-  name?: string;
-  poster_path?: string;
-  media_type: 'movie' | 'tv';
-  release_date?: string;
-  first_air_date?: string;
-  vote_average: number;
-  watchlist_count?: number;
-}
+import { Media } from '@/types/types';
 
 interface MediaState {
   data: Media[];

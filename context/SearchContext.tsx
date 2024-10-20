@@ -1,13 +1,8 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { Media } from '@/types/types';
 
-interface SearchResult {
-  id: number;
-  title: string;
+export interface SearchResult extends Media {
   overview: string;
-  poster_path: string | null;
-  media_type: string;
-  release_date: string;
-  vote_average: number;
 }
 
 interface SearchState {

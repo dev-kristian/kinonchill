@@ -4,10 +4,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MoviePoster from '@/components/MoviePoster';
-import { Movie } from '@/types/types';
+import { Media } from '@/types/types';
 
 interface SearchResultsContentProps {
-  results: Movie[];
+  results: Media[];
 }
 
 export default function SearchResultsContent({ results }: SearchResultsContentProps) {
@@ -21,7 +21,7 @@ export default function SearchResultsContent({ results }: SearchResultsContentPr
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {results.map((movie: Movie) => (
+          {results.map((movie: Media) => (
             <motion.div
               key={movie.id}
               initial={{ opacity: 0, scale: 0.9 }}

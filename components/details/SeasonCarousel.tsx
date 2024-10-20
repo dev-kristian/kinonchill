@@ -36,8 +36,9 @@ const SeasonCarousel: React.FC<SeasonCarouselProps> = ({ seasons }) => {
                   <Image
                     src={`https://image.tmdb.org/t/p/w300${season.poster_path}`}
                     alt={season.name}
-                    layout="fill"
-                    objectFit="cover"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-700 flex items-center justify-center">

@@ -13,22 +13,12 @@ import {
   serverTimestamp, 
   increment
 } from 'firebase/firestore';
-import { UserData } from '@/types/types';
-
-interface MovieTVDetails {
-  id: number;
-  title?: string;
-  name?: string;
-  poster_path?: string | null;
-  release_date?: string;
-  first_air_date?: string;
-  vote_average: number;
-}
+import { Media ,UserData } from '@/types/types';
 
 interface UserDataContextType {
   userData: UserData | null;
   isLoading: boolean;
-  addToWatchlist: (item: MovieTVDetails, mediaType: 'movie' | 'tv') => Promise<void>;
+  addToWatchlist: (item: Media, mediaType: 'movie' | 'tv') => Promise<void>;
   removeFromWatchlist: (id: number, mediaType: 'movie' | 'tv') => Promise<void>;
   updateNotificationStatus: (status: 'allowed' | 'denied' | 'unsupported') => Promise<void>;
 }
@@ -78,7 +68,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => unsubscribe();
   }, [user]);
   
-  const addToWatchlist = async (item: MovieTVDetails, mediaType: 'movie' | 'tv') => {
+  const addToWatchlist = async (item: Media, mediaType: 'movie' | 'tv') => {
     if (!user || !userData) return;
 
     const userDocRef = doc(db, 'users', user.uid);

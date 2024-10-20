@@ -69,13 +69,13 @@ const TopWatchlist: React.FC = () => {
               className="bg-gradient-to-l from-gray-800 to-pink-900/50 rounded-lg overflow-hidden hover:bg-gray-700/50 transition-all duration-200 "
             >
               <Link href={`/details/${mediaType}/${item.id}`} className="flex items-center px-2 py-1 space-x-3">
-                <div className="flex-shrink-0 w-12 h-16 relative rounded-md overflow-hidden ">
+                <div className="flex-shrink-0 w-12 h-16 relative rounded-md overflow-hidden">
                   <Image
                     src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
                     alt={item.title || item.name || ''}
-                    layout="fill"
-                    objectFit="cover"
-                    className="transition-transform duration-300 hover:scale-110 "
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="transition-transform duration-300 hover:scale-110 object-cover"
                   />
                 </div>
                 <div className="flex-grow min-w-0" >

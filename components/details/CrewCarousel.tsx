@@ -69,8 +69,9 @@ const CrewCarousel: React.FC<CrewCarouselProps> = ({ cast, crew, isLoading, erro
                   <Image
                     src={`https://image.tmdb.org/t/p/w300${crewMember.profile_path}`}
                     alt={crewMember.name}
-                    layout="fill"
-                    objectFit="cover"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-700 flex items-center justify-center">

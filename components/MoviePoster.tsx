@@ -4,11 +4,11 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
 import { useUserData } from '@/context/UserDataContext';
-import { Movie } from '@/types/types';
+import { Media } from '@/types/types';
 import { BookmarkPlus, BookmarkMinus, Users } from 'lucide-react';
 
 interface MoviePosterProps {
-  movie: Movie;
+  movie: Media;
   showMediaType?: boolean;
 }
 

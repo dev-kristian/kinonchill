@@ -4,27 +4,15 @@ import MoviePoster from './MoviePoster';
 import Spinner from './Spinner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-interface MediaItem {
-  id: number;
-  title?: string;
-  name?: string;
-  poster_path?: string; 
-  media_type: 'movie' | 'tv';
-  release_date?: string;
-  first_air_date?: string;
-  vote_average: number;
-  watchlist_count?: number;
-}
+import { Media } from '@/types/types';
 
 interface MediaCarouselProps {
   title?: string;
-  items: MediaItem[];
+  items: Media[];
   isLoading: boolean;
   showMediaTypeTabs?: boolean;
   error: string | null;
-  fetchItems?: () => void; // Make this optional
-
+  fetchItems?: () => void;
   mediaType: 'movie' | 'tv';
   setMediaType?: (type: 'movie' | 'tv') => void;
   timeWindow?: 'day' | 'week';
