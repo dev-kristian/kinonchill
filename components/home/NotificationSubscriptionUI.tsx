@@ -4,17 +4,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Bell, AlertTriangle, Info, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-interface NotificationSubscriptionUIProps {
-  isSupported: boolean | null;
-  isIOS166OrHigher: boolean;
-  isStandalone: boolean;
-  userData: any;
-  showDetails: boolean;
-  setShowDetails: (show: boolean) => void;
-  handleUpdateNotificationStatus: (status: 'allowed' | 'denied' | 'unsupported') => void;
-  handleSubscribe: () => void;
-}
+import { NotificationSubscriptionUIProps } from '@/types/types';
 
 const NotificationSubscriptionUI: React.FC<NotificationSubscriptionUIProps> = ({
   isSupported,
@@ -58,7 +48,7 @@ const NotificationSubscriptionUI: React.FC<NotificationSubscriptionUIProps> = ({
               {showDetails ? 'Hide Details' : 'Show Details'}
             </Button>
           </div>
-          <p className="text-gray-300 text-sm mb-3">Your current device or browser doesn't support push notifications.</p>
+          <p className="text-gray-300 text-sm mb-3">Your current device or browser doesn&apos;t support push notifications.</p>
           {showDetails && (
             <div className="text-gray-300 text-sm mb-3">
               <p className="mb-2">To receive notifications, try:</p>
@@ -106,8 +96,8 @@ const NotificationSubscriptionUI: React.FC<NotificationSubscriptionUIProps> = ({
           {showDetails && (
             <ol className="text-gray-300 text-sm mb-3 list-decimal list-inside">
               <li>Tap the share button <ExternalLink size={14} className="inline" /> at the bottom of your screen</li>
-              <li>Scroll down and tap 'Add to Home Screen'</li>
-              <li>Tap 'Add' in the top right corner</li>
+              <li>Scroll down and tap &apos;Add to Home Screen&apos;</li>
+              <li>Tap &apos;Add&apos; in the top right corner</li>
               <li>Open the app from your home screen</li>
             </ol>
           )}

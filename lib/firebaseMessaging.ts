@@ -1,5 +1,5 @@
 // lib/firebaseMessaging.ts
-import { getToken, onMessage } from "firebase/messaging";
+import { getToken, onMessage, MessagePayload } from "firebase/messaging";
 import { getMessagingInstance } from "./firebase";
 
 export const requestForToken = async () => {
@@ -26,7 +26,7 @@ export const requestForToken = async () => {
   }
 };
 
-export const onMessageListener = async (callback: (payload: any) => void) => {
+export const onMessageListener = async (callback: (payload: MessagePayload) => void) => {
   const messaging = await getMessagingInstance();
   if (!messaging) {
     console.log('Firebase messaging is not supported in this browser');

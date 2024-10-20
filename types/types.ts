@@ -95,3 +95,44 @@ export interface VideoData {
 export interface TopWatchlistItem extends Movie, TVShow {
   weighted_score: number;
 }
+
+export interface DatePopularity {
+  date: string;
+  count: number;
+  users: string[];
+  hours: { [hour: number]: { count: number; users: string[] } };
+}
+
+export interface DateTimeSelection {
+  date: Date;
+  hours: number[] | 'all';
+}
+
+export interface NotificationPayload {
+  notification?: {
+    title?: string;
+    body?: string;
+  };
+}
+
+export type NotificationStatus = 'allowed' | 'denied' | 'unsupported';
+
+export interface UserData {
+  username: string;
+  watchlist: {
+    movie: { [movieId: string]: boolean };
+    tv: { [tvId: string]: boolean };
+  };
+  notification?: NotificationStatus;
+}
+
+export interface NotificationSubscriptionUIProps {
+  isSupported: boolean | null;
+  isIOS166OrHigher: boolean;
+  isStandalone: boolean;
+  userData: UserData | null;
+  showDetails: boolean;
+  setShowDetails: (show: boolean) => void;
+  handleUpdateNotificationStatus: (status: NotificationStatus) => Promise<void>;
+  handleSubscribe: () => Promise<void>;
+}

@@ -13,15 +13,7 @@ import {
   serverTimestamp, 
   increment
 } from 'firebase/firestore';
-
-interface UserData {
-  username: string;
-  watchlist: {
-    movie: { [movieId: string]: boolean };
-    tv: { [tvId: string]: boolean };
-  };
-  notification?: 'allowed' | 'denied' | 'unsupported';
-}
+import { UserData } from '@/types/types';
 
 interface MovieTVDetails {
   id: number;

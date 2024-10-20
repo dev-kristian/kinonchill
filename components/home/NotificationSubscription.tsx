@@ -5,13 +5,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserData } from '@/context/UserDataContext';
 import { requestForToken, onMessageListener } from '@/lib/firebaseMessaging';
 import NotificationSubscriptionUI from './NotificationSubscriptionUI';
+import { NotificationPayload } from '@/types/types'; 
+import { NotificationStatus } from '@/types/types';
 
 const NotificationSubscription = () => {
   const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const [isIOS166OrHigher, setIsIOS166OrHigher] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const { toast } = useToast();
-  const { userData, updateNotificationStatus } = useUserData();
+  const { userData, updateNotificationStatus } = useUserData()
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ const NotificationSubscription = () => {
   useEffect(() => {
     if (isSupported) {
       const setupMessaging = async () => {
-        const unsubscribe = await onMessageListener((payload: any) => {
+        const unsubscribe = await onMessageListener((payload: NotificationPayload) => {
           console.log('New foreground notification:', payload);
           toast({
             title: payload?.notification?.title || "New Notification",
@@ -72,7 +74,7 @@ const NotificationSubscription = () => {
     }
   }, [isSupported, toast]);
 
-  const handleUpdateNotificationStatus = async (status: 'allowed' | 'denied' | 'unsupported') => {
+  const handleUpdateNotificationStatus = async (status: NotificationStatus) => {
     try {
       await updateNotificationStatus(status);
     } catch (error) {
@@ -97,34 +99,35 @@ const NotificationSubscription = () => {
     }
   
     if ('Notification' in window) {
-      let permission = await window.Notification.requestPermission();
-      if (permission === "granted") {
-        console.log("Notification permission granted. Requesting for token.");
-        const token = await requestForToken();
-        if (token) {
-          try {
-            await fetch('/api/subscribe-to-topic', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ token }),
-            });
-            await handleUpdateNotificationStatus("allowed");
-            toast({
-              title: "Notifications Enabled",
-              description: "You'll now receive updates from Kino & Cill!",
-              variant: "default",
-            });
-          } catch (error) {
-            toast({
-              title: "Subscription Error",
-              description: "Failed to enable notifications. Please try again later.",
-              variant: "destructive",
-            });
-          }
+    const permission = await window.Notification.requestPermission();
+    if (permission === "granted") {
+      console.log("Notification permission granted. Requesting for token.");
+      const token = await requestForToken();
+      if (token) {
+        try {
+          await fetch('/api/subscribe-to-topic', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token }),
+          });
+          await handleUpdateNotificationStatus("allowed");
+          toast({
+            title: "Notifications Enabled",
+            description: "You'll now receive updates from Kino & Cill!",
+            variant: "default",
+          });
+        } catch (error) {
+          console.error("Error enabling notifications:", error);
+          toast({
+            title: "Subscription Error",
+            description: "Failed to enable notifications. Please try again later.",
+            variant: "destructive",
+          });
         }
-      } else {
+      }
+    } else {
         await handleUpdateNotificationStatus("denied");
         toast({
           title: "Permission Denied",
