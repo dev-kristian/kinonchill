@@ -1,15 +1,8 @@
-// public/firebase-messaging-sw.js
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+importScripts('/firebaseConfig.js');
 
-firebase.initializeApp({
-  apiKey: "AIzaSyBMl2-dsWYFs_vVG_oKjBg6WCjl79QBR_Y",
-  authDomain: "kino-n-chill.firebaseapp.com",
-  projectId: "kino-n-chill",
-  storageBucket: "kino-n-chill.appspot.com",
-  messagingSenderId: "904976281790",
-  appId: "1:904976281790:web:eb2fbdd47862df668a6eef"
-});
+firebase.initializeApp(self.firebaseConfig);
 
 const messaging = firebase.messaging();
 

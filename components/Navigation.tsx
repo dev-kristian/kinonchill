@@ -29,7 +29,7 @@ export default function Navigation() {
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="text-foreground text-xl font-bold flex items-center">
           <Image 
-            src="/icons/popcorn.svg" 
+            src="/icons/popcorn.png" 
             alt="Popcorn icon" 
             width={24} 
             height={24} 

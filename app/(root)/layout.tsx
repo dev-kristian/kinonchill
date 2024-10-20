@@ -7,7 +7,6 @@ import { UserDataProvider } from '@/context/UserDataContext'
 import { SearchProvider } from '@/context/SearchContext'
 import { TrendingProvider } from '@/context/TrendingContext'
 import { TopWatchlistProvider } from '@/context/TopWatchlistContext'
-import { ViewProvider } from '@/context/ViewContext'
 import { SessionProvider } from '@/context/SessionContext'
 import { Toaster } from '@/components/ui/toaster'
 
@@ -17,7 +16,6 @@ function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ViewProvider>
       <UserDataProvider>
         <SearchProvider>
           <TopWatchlistProvider>
@@ -35,7 +33,6 @@ function RootLayout({
           </TopWatchlistProvider>
         </SearchProvider>
       </UserDataProvider>
-    </ViewProvider>
   )
 }
 
