@@ -31,9 +31,9 @@ export default function Navigation() {
           <Image 
             src="/icons/popcorn.png" 
             alt="Popcorn icon" 
-            width={24} 
-            height={24} 
-            className="mr-2"
+            width={28}
+            height={28} 
+            className="mb-2"
           />
           Kino & Chill
         </Link>

@@ -6,7 +6,7 @@ import {
   collection, 
   doc,
   query, 
-  where,  // Add this line
+  where, 
   orderBy, 
   limit,
   setDoc,

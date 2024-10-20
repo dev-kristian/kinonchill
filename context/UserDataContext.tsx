@@ -1,5 +1,3 @@
-// context/UserDataContext.tsx
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuthContext } from './AuthContext';
 import { db } from '@/lib/firebase';
@@ -13,7 +11,8 @@ import {
   serverTimestamp, 
   increment
 } from 'firebase/firestore';
-import { Media ,UserData } from '@/types/types';
+import { Media, UserData, TopWatchlistItem } from '@/types/types';
+import { useTopWatchlist } from './TopWatchlistContext';
 
 interface UserDataContextType {
   userData: UserData | null;
@@ -37,6 +36,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { user } = useAuthContext();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { topWatchlistItems, setTopWatchlistItems } = useTopWatchlist();
 
   useEffect(() => {
     if (!user) {
@@ -78,6 +78,18 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       await setDoc(userDocRef, { email: user.email }, { merge: true });
 
+      // Update local state
+      setUserData(prevData => ({
+        ...prevData!,
+        watchlist: {
+          ...prevData!.watchlist,
+          [mediaType]: {
+            ...prevData!.watchlist[mediaType],
+            [item.id.toString()]: true
+          }
+        }
+      }));
+
       await setDoc(watchlistDocRef, {
         watchlist: {
           ...userData.watchlist,
@@ -96,14 +108,53 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             [`${item.id}.watchlist_count`]: increment(1),
             [`${item.id}.last_updated`]: serverTimestamp()
           });
-        } else {
-          await updateDoc(itemsDocRef, {
-            [item.id]: {
-              ...item,
-              media_type: mediaType,
-              last_updated: serverTimestamp(),
-              watchlist_count: 1
+
+          // Update TopWatchlist state
+          setTopWatchlistItems(prevItems => {
+            const updatedItems = [...prevItems[mediaType]];
+            const index = updatedItems.findIndex(i => i.id === item.id);
+            if (index !== -1) {
+              updatedItems[index] = {
+                ...updatedItems[index],
+                watchlist_count: ((updatedItems[index].watchlist_count || 0) + 1),
+                weighted_score: ((updatedItems[index].vote_average || 0) * 1.3) + ((updatedItems[index].watchlist_count || 0) + 1)
+              };
+              updatedItems.sort((a, b) => b.weighted_score - a.weighted_score);
+            } else if (updatedItems.length < 20) {
+              updatedItems.push({
+                ...item,
+                watchlist_count: 1,
+                weighted_score: ((item.vote_average || 0) * 1.3) + 1
+              } as TopWatchlistItem);
+              updatedItems.sort((a, b) => b.weighted_score - a.weighted_score);
             }
+            return {
+              ...prevItems,
+              [mediaType]: updatedItems.slice(0, 20)
+            };
+          });
+        } else {
+          const newItem = {
+            ...item,
+            media_type: mediaType,
+            last_updated: serverTimestamp(),
+            watchlist_count: 1
+          };
+          await updateDoc(itemsDocRef, {
+            [item.id]: newItem
+          });
+
+          // Update TopWatchlist state
+          setTopWatchlistItems(prevItems => {
+            const updatedItems = [...prevItems[mediaType], {
+              ...newItem,
+              weighted_score: ((item.vote_average || 0) * 1.3) + 1
+            } as TopWatchlistItem];
+            updatedItems.sort((a, b) => b.weighted_score - a.weighted_score);
+            return {
+              ...prevItems,
+              [mediaType]: updatedItems.slice(0, 20)
+            };
           });
         }
       }
@@ -121,6 +172,13 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const watchlistDocRef = doc(db, 'users', user.uid, 'userMovieData', 'watchlist');
       const itemsDocRef = doc(db, mediaType === 'movie' ? 'movies' : 'tvShows', 'allItems');
 
+      // Update local state
+      setUserData(prevData => {
+        const updatedWatchlist = { ...prevData!.watchlist };
+        delete updatedWatchlist[mediaType][id.toString()];
+        return { ...prevData!, watchlist: updatedWatchlist };
+      });
+
       await updateDoc(watchlistDocRef, {
         [`watchlist.${mediaType}.${id.toString()}`]: deleteField()
       });
@@ -128,6 +186,26 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await updateDoc(itemsDocRef, {
         [`${id}.watchlist_count`]: increment(-1),
         [`${id}.last_updated`]: serverTimestamp()
+      });
+
+      // Update TopWatchlist state
+      setTopWatchlistItems(prevItems => {
+        const updatedItems = prevItems[mediaType].map(item => {
+          if (item.id === id) {
+            const newWatchlistCount = Math.max((item.watchlist_count || 1) - 1, 0);
+            return {
+              ...item,
+              watchlist_count: newWatchlistCount,
+              weighted_score: ((item.vote_average || 0) * 1.3) + newWatchlistCount
+            };
+          }
+          return item;
+        }).filter(item => (item.watchlist_count || 0) > 0);
+        updatedItems.sort((a, b) => b.weighted_score - a.weighted_score);
+        return {
+          ...prevItems,
+          [mediaType]: updatedItems
+        };
       });
 
       console.log(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} ID ${id} removed from watchlist successfully.`);

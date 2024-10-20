@@ -73,7 +73,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
   };
 
   const handleWatchlistContainerClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent click propagation in the entire watchlist container
+    e.stopPropagation(); 
   };
 
   return (

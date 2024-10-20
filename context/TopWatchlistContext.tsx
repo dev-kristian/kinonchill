@@ -12,6 +12,10 @@ interface TopWatchlistContextType {
     movie: TopWatchlistItem[];
     tv: TopWatchlistItem[];
   };
+  setTopWatchlistItems: React.Dispatch<React.SetStateAction<{
+    movie: TopWatchlistItem[];
+    tv: TopWatchlistItem[];
+  }>>;
   isLoading: boolean;
   error: string | null;
   fetchTopWatchlistItems: (mediaType: 'movie' | 'tv') => Promise<void>;
@@ -110,6 +114,7 @@ export const TopWatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ 
   return (
     <TopWatchlistContext.Provider value={{ 
       topWatchlistItems, 
+      setTopWatchlistItems, // Add this line
       isLoading, 
       error, 
       fetchTopWatchlistItems,

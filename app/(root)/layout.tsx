@@ -16,9 +16,9 @@ function RootLayout({
   children: React.ReactNode
 }) {
   return (
+          <TopWatchlistProvider>
       <UserDataProvider>
         <SearchProvider>
-          <TopWatchlistProvider>
             <TrendingProvider>
                 <SessionProvider>
                   <div className="flex flex-col min-h-screen ">
@@ -30,9 +30,9 @@ function RootLayout({
                   </div>
                 </SessionProvider>
             </TrendingProvider>
-          </TopWatchlistProvider>
         </SearchProvider>
       </UserDataProvider>
+          </TopWatchlistProvider>
   )
 }
 
