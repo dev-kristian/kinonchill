@@ -36,7 +36,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { user } = useAuthContext();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { topWatchlistItems, setTopWatchlistItems } = useTopWatchlist();
+  const { setTopWatchlistItems } = useTopWatchlist();
 
   useEffect(() => {
     if (!user) {
