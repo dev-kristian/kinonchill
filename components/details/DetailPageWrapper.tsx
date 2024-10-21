@@ -83,7 +83,7 @@ const DetailPageWrapper: React.FC<DetailPageWrapperProps> = ({ details, videos }
           </div>
         </div>
       </div>
-
+ 
       {showTrailer && trailer && (
         <YouTubeEmbed 
           videoId={trailer.key} 

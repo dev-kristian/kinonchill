@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuthContext } from './AuthContext';
 import { useUserData } from './UserDataContext';
 import { db } from '@/lib/firebase';
@@ -15,14 +15,16 @@ import {
   serverTimestamp,
   DocumentData,
   Timestamp,
-  Unsubscribe
+  Unsubscribe,
+  getDoc, 
+  deleteField
 } from 'firebase/firestore';
 import { DateTimeSelection } from '@/types/types';
 
 interface Poll {
   id: string;
   movieTitles: string[];
-  votes: { [username: string]: string };
+  votes: { [username: string]: string[] };
 }
 
 interface Session {
@@ -36,7 +38,7 @@ interface Session {
     }[];
   };
   poll?: Poll;
-  status: 'active' | 'inactive'; // Add this line
+  status: 'active' | 'inactive';
 }
 
 interface SessionContextType {
@@ -48,6 +50,9 @@ interface SessionContextType {
   fetchLatestSession: () => Promise<Unsubscribe | undefined>;
   updateUserDates: (sessionId: string, dates: DateTimeSelection[]) => Promise<void>;
   setLatestSession: React.Dispatch<React.SetStateAction<Session | null>>;
+  toggleVoteForMovie: (sessionId: string, movieTitle: string) => Promise<void>;
+  addMovieToPoll: (sessionId: string, movieTitle: string) => Promise<void>;
+  removeMovieFromPoll: (sessionId: string, movieTitle: string) => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -168,8 +173,79 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       throw error;
     }
   };
+  const addMovieToPoll = async (sessionId: string, movieTitle: string) => {
+    if (!user || !userData) throw new Error('User must be logged in to add a movie');
+    try {
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnapshot = await getDoc(sessionRef);
+      const sessionData = sessionSnapshot.data() as Session;
+  
+      if (!sessionData.poll) throw new Error('No poll exists for this session');
+  
+      const updatedMovieTitles = [...sessionData.poll.movieTitles, movieTitle];
+  
+      await updateDoc(sessionRef, {
+        'poll.movieTitles': updatedMovieTitles
+      });
+  
+      // Update local state
+      setLatestSession(prevSession => {
+        if (prevSession && prevSession.id === sessionId && prevSession.poll) {
+          return {
+            ...prevSession,
+            poll: {
+              ...prevSession.poll,
+              movieTitles: updatedMovieTitles
+            }
+          };
+        }
+        return prevSession;
+      });
+    } catch (error) {
+      console.error("Error adding movie to poll: ", error);
+      throw error;
+    }
+  };
 
-const fetchLatestSession = useCallback(async (): Promise<Unsubscribe | undefined> => {
+  const removeMovieFromPoll = async (sessionId: string, movieTitle: string) => {
+    if (!user || !userData) throw new Error('User must be logged in to remove a movie');
+    try {
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnapshot = await getDoc(sessionRef);
+      const sessionData = sessionSnapshot.data() as Session;
+  
+      if (!sessionData.poll) throw new Error('No poll exists for this session');
+  
+      const updatedMovieTitles = sessionData.poll.movieTitles.filter(title => title !== movieTitle);
+  
+      await updateDoc(sessionRef, {
+        'poll.movieTitles': updatedMovieTitles,
+        [`poll.votes.$${movieTitle}`]: deleteField()
+      });
+  
+      // Update local state
+      setLatestSession(prevSession => {
+        if (prevSession && prevSession.id === sessionId && prevSession.poll) {
+          const updatedVotes = { ...prevSession.poll.votes };
+          delete updatedVotes[movieTitle];
+          return {
+            ...prevSession,
+            poll: {
+              ...prevSession.poll,
+              movieTitles: updatedMovieTitles,
+              votes: updatedVotes
+            }
+          };
+        }
+        return prevSession;
+      });
+    } catch (error) {
+      console.error("Error removing movie from poll: ", error);
+      throw error;
+    }
+  };
+
+  const fetchLatestSession = useCallback(async (): Promise<Unsubscribe | undefined> => {
     if (!user || !userData) return;
     try {
       const sessionsRef = collection(db, 'sessions');
@@ -184,34 +260,39 @@ const fetchLatestSession = useCallback(async (): Promise<Unsubscribe | undefined
         if (!querySnapshot.empty) {
           const doc = querySnapshot.docs[0];
           const data = doc.data() as DocumentData;
-          const session: Session = {
-            id: doc.id,
-            createdAt: data.createdAt.toDate(),
-            createdBy: data.createdBy,
-            userDates: Object.fromEntries(
-              Object.entries(data.userDates).map(([username, dates]) => [
-                username,
-                (dates as { date: Timestamp; hours: Timestamp[] | 'all' }[]).map(({ date, hours }) => ({
-                  date: date.toDate().toISOString(),
-                  hours: hours === 'all' ? 'all' : (hours as Timestamp[]).map(ts => ts.toDate().toISOString())
-                }))
-              ])
-            ),
-            poll: data.poll ? {
-              id: data.poll.id,
-              movieTitles: data.poll.movieTitles,
-              votes: data.poll.votes
-            } : undefined,
-            status: data.status
-          };
-          setLatestSession(session);
-          setCurrentSession(session);
+          
+          // Check if createdAt exists and is not null
+          if (data.createdAt) {
+            const session: Session = {
+              id: doc.id,
+              createdAt: data.createdAt.toDate(),
+              createdBy: data.createdBy,
+              userDates: Object.fromEntries(
+                Object.entries(data.userDates).map(([username, dates]) => [
+                  username,
+                  (dates as { date: Timestamp; hours: Timestamp[] | 'all' }[]).map(({ date, hours }) => ({
+                    date: date.toDate().toISOString(),
+                    hours: hours === 'all' ? 'all' : (hours as Timestamp[]).map(ts => ts.toDate().toISOString())
+                  }))
+                ])
+              ),
+              poll: data.poll ? {
+                id: data.poll.id,
+                movieTitles: data.poll.movieTitles,
+                votes: data.poll.votes
+              } : undefined,
+              status: data.status
+            };
+            setLatestSession(session);
+            setCurrentSession(session);
+          } else {
+          }
         } else {
           setLatestSession(null);
           setCurrentSession(null);
         }
       });
-
+  
       return unsubscribe;
     } catch (error) {
       console.error("Error fetching latest active session: ", error);
@@ -237,17 +318,62 @@ const fetchLatestSession = useCallback(async (): Promise<Unsubscribe | undefined
     };
   }, [user, userData, fetchLatestSession]);
 
+  const toggleVoteForMovie = async (sessionId: string, movieTitle: string) => {
+    if (!user || !userData) throw new Error('User must be logged in to vote');
+    try {
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnapshot = await getDoc(sessionRef);
+      const sessionData = sessionSnapshot.data() as Session;
+
+      if (!sessionData.poll) throw new Error('No poll exists for this session');
+
+      const userVotes = sessionData.poll.votes[userData.username] || [];
+      const updatedVotes = userVotes.includes(movieTitle)
+        ? userVotes.filter(vote => vote !== movieTitle)
+        : [...userVotes, movieTitle];
+
+      await updateDoc(sessionRef, {
+        [`poll.votes.${userData.username}`]: updatedVotes
+      });
+
+      // Update local state
+      setLatestSession(prevSession => {
+        if (prevSession && prevSession.id === sessionId && prevSession.poll) {
+          return {
+            ...prevSession,
+            poll: {
+              ...prevSession.poll,
+              votes: {
+                ...prevSession.poll.votes,
+                [userData.username]: updatedVotes
+              }
+            }
+          };
+        }
+        return prevSession;
+      });
+    } catch (error) {
+      console.error("Error toggling vote for movie: ", error);
+      throw error;
+    }
+  };
+
+  const contextValue = useMemo(() => ({
+    currentSession, 
+    allSessions, 
+    createSession, 
+    createPoll,
+    latestSession,
+    fetchLatestSession,
+    updateUserDates,
+    setLatestSession,
+    toggleVoteForMovie,
+    addMovieToPoll,
+    removeMovieFromPoll
+}), [currentSession, allSessions, latestSession, fetchLatestSession]);
+  
   return (
-    <SessionContext.Provider value={{ 
-      currentSession, 
-      allSessions, 
-      createSession, 
-      createPoll,
-      latestSession,
-      fetchLatestSession,
-      updateUserDates,
-      setLatestSession
-    }}>
+    <SessionContext.Provider value={contextValue}>
       {children}
     </SessionContext.Provider>
   );
