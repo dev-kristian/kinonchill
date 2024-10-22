@@ -30,7 +30,6 @@ export default function MovieNightInvitation() {
   const { 
     createSession, 
     createPoll, 
-    fetchAllSessions 
   } = useSession();
   const { sendInvitation, error: invitationError } = useSendInvitation();
   const [selectedDates, setSelectedDates] = useState<DateTimeSelection[]>([]);
@@ -78,9 +77,6 @@ export default function MovieNightInvitation() {
           throw new Error(invitationError);
         }
       }
-
-      // Fetch all sessions to update the context
-      await fetchAllSessions();
 
       // Show success toast
       toast({
