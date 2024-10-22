@@ -8,7 +8,6 @@ import TopWatchlist from '@/components/home/TopWatchlist';
 import { useUserData } from '@/context/UserDataContext';
 import NotificationSubscription from '@/components/home/NotificationSubscription';
 import MovieNightInvitation from '@/components/home/MovieNightInvitation';
-import LatestSession from '@/components/home/LatestSession';
 
 export default function Home() {
   const { userData, isLoading } = useUserData();
@@ -43,7 +42,6 @@ export default function Home() {
 
       <div className="flex flex-col lg:flex-row lg:space-x-4 gap-4">
         <div className="w-full lg:w-3/4 space-y-4">
-          <LatestSession />
           <MovieNightInvitation />
         </div>
         

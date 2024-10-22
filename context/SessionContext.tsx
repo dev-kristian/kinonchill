@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuthContext } from './AuthContext';
 import { useUserData } from './UserDataContext';
 import { db } from '@/lib/firebase';
@@ -6,51 +6,27 @@ import {
   collection, 
   doc,
   query, 
-  where, 
-  orderBy, 
-  limit,
+  orderBy,
   setDoc,
   updateDoc,
-  onSnapshot,
   serverTimestamp,
-  DocumentData,
   Timestamp,
-  Unsubscribe,
   getDoc, 
+  getDocs,
   deleteField
 } from 'firebase/firestore';
 import { DateTimeSelection } from '@/types/types';
-
-interface Poll {
-  id: string;
-  movieTitles: string[];
-  votes: { [username: string]: string[] };
-}
-
-interface Session {
-  id: string;
-  createdAt: Date;
-  createdBy: string;
-  userDates: {
-    [username: string]: {
-      date: string;
-      hours: string[] | 'all';
-    }[];
-  };
-  poll?: Poll;
-  status: 'active' | 'inactive';
-}
+import { Session } from '@/types/types';
 
 interface SessionContextType {
   createSession: (dates: DateTimeSelection[]) => Promise<Session>;
   createPoll: (sessionId: string, movieTitles: string[]) => Promise<void>;
-  latestSession: Session | null;
-  fetchLatestSession: () => Promise<Unsubscribe | undefined>;
   updateUserDates: (sessionId: string, dates: DateTimeSelection[]) => Promise<void>;
-  setLatestSession: React.Dispatch<React.SetStateAction<Session | null>>;
-  toggleVoteForMovie: (sessionId: string, movieTitle: string) => Promise<void>;
+  toggleVote: (sessionId: string, movieTitle: string) => Promise<void>;
   addMovieToPoll: (sessionId: string, movieTitle: string) => Promise<void>;
   removeMovieFromPoll: (sessionId: string, movieTitle: string) => Promise<void>;
+  fetchAllSessions: () => Promise<Session[]>;
+  sessions: Session[];
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -66,9 +42,9 @@ export const useSession = () => {
 export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuthContext();
   const { userData } = useUserData();
-  const [latestSession, setLatestSession] = useState<Session | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
 
-  const createSession = async (dates: DateTimeSelection[]): Promise<Session> => {
+  const createSession = useCallback(async (dates: DateTimeSelection[]): Promise<Session> => {
     if (!user || !userData) throw new Error('User must be logged in to create a session');
     try {
       const sessionsRef = collection(db, 'sessions');
@@ -100,16 +76,58 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         status: 'active'
       };
   
-      setLatestSession(newSession); // Add this line to set the latest session
+      setSessions(prev => [newSession, ...prev]);
   
       return newSession;
     } catch (error) {
       console.error("Error creating session: ", error);
       throw error;
     }
-  };
+  }, [user, userData]);
 
-  const updateUserDates = async (sessionId: string, dates: DateTimeSelection[]) => {
+  const fetchAllSessions = useCallback(async (): Promise<Session[]> => {
+    if (!user || !userData) throw new Error('User must be logged in to fetch sessions');
+    try {
+      const sessionsRef = collection(db, 'sessions');
+      const q = query(
+        sessionsRef,
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const sessionsList: Session[] = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          createdAt: data.createdAt.toDate(),
+          createdBy: data.createdBy,
+          userDates: Object.fromEntries(
+            Object.entries(data.userDates).map(([username, dates]) => [
+              username,
+              (dates as { date: Timestamp; hours: Timestamp[] | 'all' }[]).map(({ date, hours }) => ({
+                date: date.toDate().toISOString(),
+                hours: hours === 'all' ? 'all' : (hours as Timestamp[]).map(ts => ts.toDate().toISOString())
+              }))
+            ])
+          ),
+          poll: data.poll ? {
+            id: data.poll.id,
+            movieTitles: data.poll.movieTitles,
+            votes: data.poll.votes
+          } : undefined,
+          status: data.status
+        };
+      });
+  
+      setSessions(sessionsList);
+      return sessionsList;
+    } catch (error) {
+      console.error("Error fetching sessions: ", error);
+      throw error;
+    }
+  }, [user, userData]);
+
+  const updateUserDates = useCallback(async (sessionId: string, dates: DateTimeSelection[]) => {
     if (!user || !userData) throw new Error('User must be logged in to update dates');
     try {
       const sessionRef = doc(db, 'sessions', sessionId);
@@ -119,14 +137,15 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           hours: hours === 'all' ? 'all' : hours.map(h => Timestamp.fromDate(new Date(date.setHours(h))))
         }))
       });
-      // No need to update local state here, as it will be updated by the listener
+      
+      await fetchAllSessions();
     } catch (error) {
       console.error("Error updating user dates: ", error);
       throw error;
     }
-  };
+  }, [user, userData, fetchAllSessions]);
 
-  const createPoll = async (sessionId: string, movieTitles: string[]) => {
+  const createPoll = useCallback(async (sessionId: string, movieTitles: string[]) => {
     if (!user || !userData) throw new Error('User must be logged in to create a poll');
     try {
       const sessionRef = doc(db, 'sessions', sessionId);
@@ -141,24 +160,14 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         poll: pollData
       });
   
-      // Update the context
-      setLatestSession(prevSession => {
-        if (prevSession && prevSession.id === sessionId) {
-          return {
-            ...prevSession,
-            poll: pollData
-          };
-        }
-        return prevSession;
-      });
-  
+      await fetchAllSessions();
     } catch (error) {
       console.error("Error creating poll: ", error);
       throw error;
     }
-  };
+  }, [user, userData, fetchAllSessions]);
 
-  const addMovieToPoll = async (sessionId: string, movieTitle: string) => {
+  const addMovieToPoll = useCallback(async (sessionId: string, movieTitle: string) => {
     if (!user || !userData) throw new Error('User must be logged in to add a movie');
     try {
       const sessionRef = doc(db, 'sessions', sessionId);
@@ -173,26 +182,14 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         'poll.movieTitles': updatedMovieTitles
       });
   
-      // Update local state
-      setLatestSession(prevSession => {
-        if (prevSession && prevSession.id === sessionId && prevSession.poll) {
-          return {
-            ...prevSession,
-            poll: {
-              ...prevSession.poll,
-              movieTitles: updatedMovieTitles
-            }
-          };
-        }
-        return prevSession;
-      });
+      await fetchAllSessions();
     } catch (error) {
       console.error("Error adding movie to poll: ", error);
       throw error;
     }
-  };
+  }, [user, userData, fetchAllSessions]);
 
-  const removeMovieFromPoll = async (sessionId: string, movieTitle: string) => {
+  const removeMovieFromPoll = useCallback(async (sessionId: string, movieTitle: string) => {
     if (!user || !userData) throw new Error('User must be logged in to remove a movie');
     try {
       const sessionRef = doc(db, 'sessions', sessionId);
@@ -205,102 +202,17 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   
       await updateDoc(sessionRef, {
         'poll.movieTitles': updatedMovieTitles,
-        [`poll.votes.$${movieTitle}`]: deleteField()
+        [`poll.votes.${movieTitle}`]: deleteField()
       });
   
-      // Update local state
-      setLatestSession(prevSession => {
-        if (prevSession && prevSession.id === sessionId && prevSession.poll) {
-          const updatedVotes = { ...prevSession.poll.votes };
-          delete updatedVotes[movieTitle];
-          return {
-            ...prevSession,
-            poll: {
-              ...prevSession.poll,
-              movieTitles: updatedMovieTitles,
-              votes: updatedVotes
-            }
-          };
-        }
-        return prevSession;
-      });
+      await fetchAllSessions();
     } catch (error) {
       console.error("Error removing movie from poll: ", error);
       throw error;
     }
-  };
+  }, [user, userData, fetchAllSessions]);
 
-  const fetchLatestSession = useCallback(async (): Promise<Unsubscribe | undefined> => {
-    if (!user || !userData) return;
-    try {
-      const sessionsRef = collection(db, 'sessions');
-      const q = query(
-        sessionsRef,
-        where('status', '==', 'active'),
-        orderBy('createdAt', 'desc'),
-        limit(1)
-      );
-      
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        if (!querySnapshot.empty) {
-          const doc = querySnapshot.docs[0];
-          const data = doc.data() as DocumentData;
-          
-          // Check if createdAt exists and is not null
-          if (data.createdAt) {
-            const session: Session = {
-              id: doc.id,
-              createdAt: data.createdAt.toDate(),
-              createdBy: data.createdBy,
-              userDates: Object.fromEntries(
-                Object.entries(data.userDates).map(([username, dates]) => [
-                  username,
-                  (dates as { date: Timestamp; hours: Timestamp[] | 'all' }[]).map(({ date, hours }) => ({
-                    date: date.toDate().toISOString(),
-                    hours: hours === 'all' ? 'all' : (hours as Timestamp[]).map(ts => ts.toDate().toISOString())
-                  }))
-                ])
-              ),
-              poll: data.poll ? {
-                id: data.poll.id,
-                movieTitles: data.poll.movieTitles,
-                votes: data.poll.votes
-              } : undefined,
-              status: data.status
-            };
-            setLatestSession(session);
-          } else {
-          }
-        } else {
-          setLatestSession(null);
-        }
-      });
-  
-      return unsubscribe;
-    } catch (error) {
-      console.error("Error fetching latest active session: ", error);
-    }
-  }, [user, userData]);
-
-  useEffect(() => {
-    let unsubscribe: Unsubscribe | undefined;
-
-    if (user && userData) {
-      fetchLatestSession().then((unsub) => {
-        unsubscribe = unsub;
-      });
-    } else {
-      setLatestSession(null);
-    }
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, [user, userData, fetchLatestSession]);
-
-  const toggleVoteForMovie = async (sessionId: string, movieTitle: string) => {
+  const toggleVote = useCallback(async (sessionId: string, movieTitle: string) => {
     if (!user || !userData) throw new Error('User must be logged in to vote');
     try {
       const sessionRef = doc(db, 'sessions', sessionId);
@@ -318,39 +230,38 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         [`poll.votes.${userData.username}`]: updatedVotes
       });
 
-      // Update local state
-      setLatestSession(prevSession => {
-        if (prevSession && prevSession.id === sessionId && prevSession.poll) {
-          return {
-            ...prevSession,
-            poll: {
-              ...prevSession.poll,
-              votes: {
-                ...prevSession.poll.votes,
-                [userData.username]: updatedVotes
-              }
-            }
-          };
-        }
-        return prevSession;
-      });
+      await fetchAllSessions();
     } catch (error) {
       console.error("Error toggling vote for movie: ", error);
       throw error;
     }
-  };
+  }, [user, userData, fetchAllSessions]);
+
+  useEffect(() => {
+    if (user && userData) {
+      fetchAllSessions();
+    }
+  }, [user, userData, fetchAllSessions]);
 
   const contextValue = useMemo(() => ({
-    createSession, 
+    createSession,
     createPoll,
-    latestSession,
-    fetchLatestSession,
     updateUserDates,
-    setLatestSession,
-    toggleVoteForMovie,
+    toggleVote,
     addMovieToPoll,
-    removeMovieFromPoll
-}), [latestSession, fetchLatestSession]);
+    removeMovieFromPoll,
+    fetchAllSessions,
+    sessions
+  }), [
+    createSession,
+    createPoll,
+    updateUserDates,
+    toggleVote,
+    addMovieToPoll,
+    removeMovieFromPoll,
+    fetchAllSessions,
+    sessions
+  ]);
   
   return (
     <SessionContext.Provider value={contextValue}>

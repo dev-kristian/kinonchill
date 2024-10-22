@@ -51,6 +51,9 @@ export default function Navigation() {
           <Link href="/" className="text-foreground hover:text-accent">
             Home
           </Link>
+          <Link href="/sessions" className="text-foreground hover:text-accent">
+            Sessions
+          </Link>
           <Link href="/explore" className="text-foreground hover:text-accent">
             Explore
           </Link>
@@ -71,6 +74,9 @@ export default function Navigation() {
         <div className="md:hidden mt-2">
           <Link href="/" className="block text-foreground hover:text-accent py-2">
             Home
+          </Link>
+          <Link href="/sessions" className="block text-foreground hover:text-accent py-2">
+            Sessions
           </Link>
           <Link href="/explore" className="block text-foreground hover:text-accent py-2">
             Explore
