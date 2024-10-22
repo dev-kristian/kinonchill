@@ -21,22 +21,21 @@ const LatestSession: React.FC = () => {
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined; 
-const setupLatestSession = async () => {
-  try {
-    unsubscribe = await fetchLatestSession();
-  } catch (error) {
-    console.error('Error fetching latest session:', error);
-  }
-};
+    const setupLatestSession = async () => {
+      try {
+        unsubscribe = await fetchLatestSession();
+      } catch (error) {
+        console.error('Error fetching latest session:', error);
+      }
+    };
+    setupLatestSession();
 
-setupLatestSession();
-
-return () => {
-  if (unsubscribe) {
-    unsubscribe();
-  }
-};
-
+  return () => {
+    if (unsubscribe) {
+      unsubscribe();
+    }
+  };
+  
   }, [fetchLatestSession]); 
 
   useEffect(() => {
@@ -84,27 +83,6 @@ return () => {
   if (!latestSession || !userData) {
     return null;
   } 
-
-  const renderMovieInfo = (title: string) => {
-    const info = movieDetails[title];
-    if (!info) return null; 
-return (
-  <div className="text-xs text-gray-400 mt-1">
-    <div className="flex items-center">
-      <Star className="w-3 h-3 mr-1 text-yellow-500" />
-      <span>{info.vote_average.toFixed(1)}</span>
-      <span className="mx-2">|</span>
-      <Calendar className="w-3 h-3 mr-1" />
-      <span>{format(new Date(info.release_date), 'yyyy')}</span>
-    </div>
-    <div className="mt-1">
-      <Users className="w-3 h-3 inline mr-1" />
-      <span>{info.watchlistCount} in watchlist</span>
-    </div>
-  </div>
-);
-
-  }; 
 
   const handleDatesSelected = async (dates: DateTimeSelection[]) => {
     setSelectedDates(dates);
@@ -205,14 +183,14 @@ return (
 
   {latestSession?.poll && (
     <MoviePoll
-  poll={latestSession.poll}
-  movieDetails={movieDetails}
-  getVoteCount={getVoteCount}
-  hasVoted={hasVoted}
-  handleToggleVote={handleToggleVote}
-  addMovieToPoll={handleAddMovieToPoll}
-  removeMovieFromPoll={(movieTitle) => removeMovieFromPoll(latestSession.id, movieTitle)}
-/>
+      poll={latestSession.poll}
+      movieDetails={movieDetails}
+      getVoteCount={getVoteCount}
+      hasVoted={hasVoted}
+      handleToggleVote={handleToggleVote}
+      addMovieToPoll={handleAddMovieToPoll}
+      removeMovieFromPoll={(movieTitle) => removeMovieFromPoll(latestSession.id, movieTitle)}
+    />
     )}
 </div>
 

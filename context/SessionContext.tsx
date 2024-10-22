@@ -42,8 +42,6 @@ interface Session {
 }
 
 interface SessionContextType {
-  currentSession: Session | null;
-  allSessions: Session[];
   createSession: (dates: DateTimeSelection[]) => Promise<Session>;
   createPoll: (sessionId: string, movieTitles: string[]) => Promise<void>;
   latestSession: Session | null;
@@ -68,8 +66,6 @@ export const useSession = () => {
 export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuthContext();
   const { userData } = useUserData();
-  const [currentSession, setCurrentSession] = useState<Session | null>(null);
-  const [allSessions, setAllSessions] = useState<Session[]>([]);
   const [latestSession, setLatestSession] = useState<Session | null>(null);
 
   const createSession = async (dates: DateTimeSelection[]): Promise<Session> => {
@@ -104,8 +100,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         status: 'active'
       };
   
-      setCurrentSession(newSession);
-      setAllSessions(prev => [...prev, newSession]);
       setLatestSession(newSession); // Add this line to set the latest session
   
       return newSession;
@@ -158,21 +152,12 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return prevSession;
       });
   
-      setCurrentSession(prevSession => {
-        if (prevSession && prevSession.id === sessionId) {
-          return {
-            ...prevSession,
-            poll: pollData
-          };
-        }
-        return prevSession;
-      });
-  
     } catch (error) {
       console.error("Error creating poll: ", error);
       throw error;
     }
   };
+
   const addMovieToPoll = async (sessionId: string, movieTitle: string) => {
     if (!user || !userData) throw new Error('User must be logged in to add a movie');
     try {
@@ -284,12 +269,10 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
               status: data.status
             };
             setLatestSession(session);
-            setCurrentSession(session);
           } else {
           }
         } else {
           setLatestSession(null);
-          setCurrentSession(null);
         }
       });
   
@@ -308,7 +291,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       });
     } else {
       setLatestSession(null);
-      setCurrentSession(null);
     }
 
     return () => {
@@ -359,8 +341,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const contextValue = useMemo(() => ({
-    currentSession, 
-    allSessions, 
     createSession, 
     createPoll,
     latestSession,
@@ -370,7 +350,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     toggleVoteForMovie,
     addMovieToPoll,
     removeMovieFromPoll
-}), [currentSession, allSessions, latestSession, fetchLatestSession]);
+}), [latestSession, fetchLatestSession]);
   
   return (
     <SessionContext.Provider value={contextValue}>

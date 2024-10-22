@@ -14,6 +14,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useTopWatchlist } from '@/context/TopWatchlistContext';
 import { TopWatchlistItem } from '@/types/types';
 import Image from 'next/image';
+import {
+  handleAddMovieTitle,
+  removeMovieTitle,
+  handleInputChange,
+  handleSuggestionClick,
+  useOutsideClickHandler
+} from '@/utils/movieNightInvitationUtils' // Import from the new utils file
 
 export default function MovieNightInvitation() {
   const { toast } = useToast();
@@ -24,7 +31,7 @@ export default function MovieNightInvitation() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [sendNotification, setSendNotification] = useState(true);
   const [movieTitles, setMovieTitles] = useState<TopWatchlistItem[]>([]);
-  const [newMovieTitle, setNewMovieTitle] = useState('');
+  const [inputMovieTitle, setInputMovieTitle] = useState('');
   const { topWatchlistItems } = useTopWatchlist();
   const [suggestions, setSuggestions] = useState<TopWatchlistItem[]>([]);
   const inputContainerRef = useRef<HTMLDivElement>(null);
@@ -41,57 +48,9 @@ export default function MovieNightInvitation() {
     setSelectedDates(dates);
   };
 
-  const handleAddMovieTitle = () => {
-    if (newMovieTitle.trim() !== '') {
-      const newMovie: TopWatchlistItem = {
-        id: Date.now(), // Use a temporary ID
-        title: newMovieTitle.trim(),
-        poster_path: '',
-        vote_average: 0,
-        media_type: 'movie',
-        watchlist_count: 0,
-        weighted_score: 0
-      };
-      setMovieTitles([...movieTitles, newMovie]);
-      setNewMovieTitle('');
-    }
-  };
+  // Use useOutsideClickHandler hook for outside click detection
+  useOutsideClickHandler(inputContainerRef, setSuggestions);
 
-  const removeMovieTitle = (index: number) => {
-    setMovieTitles(movieTitles.filter((_, i) => i !== index));
-  };
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (inputContainerRef.current && !inputContainerRef.current.contains(event.target as Node)) {
-        setSuggestions([]);
-      }
-    }
-  
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setNewMovieTitle(value);
-  
-    if (value.length > 1) {
-      const movieSuggestions = topWatchlistItems.movie
-        .filter(item => item.title?.toLowerCase().includes(value.toLowerCase()))
-        .slice(0, 3); // Limit to 5 suggestions
-  
-      setSuggestions(movieSuggestions);
-    } else {
-      setSuggestions([]);
-    }
-  };
-  const handleSuggestionClick = (movie: TopWatchlistItem) => {
-    setNewMovieTitle('');
-    setMovieTitles([...movieTitles, movie]);
-    setSuggestions([]);
-  };
-  
   const completeSession = async () => {
     if (userLoading || !userData) {
       toast({
@@ -165,15 +124,15 @@ export default function MovieNightInvitation() {
       <div ref={inputContainerRef} className="flex flex-col space-y-2 mb-4 relative">
         <div className="flex flex-row items-center">
           <Input 
-            value={newMovieTitle} 
-            onChange={handleInputChange}
+            value={inputMovieTitle} 
+            onChange={(e) => handleInputChange(e, setInputMovieTitle, topWatchlistItems, setSuggestions)}
             placeholder="Enter movie title"
             className="flex-grow"
           />
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button onClick={handleAddMovieTitle} className="bg-transparent hover:bg-transparent text-primary/70 md:text-white hover:text-primary/50 shadow-none">
+                <Button onClick={() => handleAddMovieTitle(inputMovieTitle, movieTitles, setMovieTitles, setInputMovieTitle)} className="bg-transparent hover:bg-transparent text-primary/70 md:text-white hover:text-primary/50 shadow-none">
                   Add Movie
                 </Button>
               </TooltipTrigger>
@@ -189,7 +148,7 @@ export default function MovieNightInvitation() {
               <li 
                 key={movie.id} 
                 className="px-4 py-2 hover:bg-gray-700 cursor-pointer flex items-center"
-                onClick={() => handleSuggestionClick(movie)}
+                onClick={() => handleSuggestionClick(movie, setInputMovieTitle, movieTitles, setMovieTitles, setSuggestions)}
               >
                 <Image 
                   src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
@@ -233,7 +192,7 @@ export default function MovieNightInvitation() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => removeMovieTitle(index)}
+                    onClick={() => removeMovieTitle(index, movieTitles, setMovieTitles)}
                     className="text-gray-400 hover:text-white"
                   >
                     <FiX />
