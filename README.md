@@ -6,7 +6,7 @@
 
 ## Screenshots
 ### Explore Movies Section
-![Media Explore Section](./public/screenshots/screenshot.png)
+![Media Explore Section](./public/screenshot.png)
 
 ## Features
 
