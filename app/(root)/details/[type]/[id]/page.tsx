@@ -14,7 +14,6 @@ interface DetailPageProps {
   };
 }
 
-
 async function getDetails(type: string, id: string): Promise<DetailsData> {
   const bearerToken = process.env.NEXT_PRIVATE_TMDB_API_KEY;
   const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?language=en-US`;
@@ -62,41 +61,6 @@ async function getDetails(type: string, id: string): Promise<DetailsData> {
   return { ...detailsData, contentRating, credits: creditsData };
 }
 
-export default async function DetailPage({ params }: DetailPageProps) {
-  let details: DetailsData;
-  let videos: VideoData[];
-
-  try {
-    [details, videos] = await Promise.all([
-      getDetails(params.type, params.id),
-      getVideos(params.type, params.id)
-    ]);
-  } catch (error) {
-    console.error('Error fetching details:', error);
-    notFound();
-  }
-
-  return (
-    <div>
-      <DetailPageWrapper
-        details={details}
-        videos={videos}
-      />
-      <div className="pt-4 w-full px-2 md:px-8">
-        {params.type === 'tv' && details.seasons && (
-            <SeasonCarousel seasons={details.seasons} />
-        )}
-        <CrewCarousel 
-          cast={details.credits.cast} 
-          crew={details.credits.crew}
-          isLoading={false} 
-          error={null} 
-        />
-      </div>
-    </div>
-  );
-}
-
 async function getVideos(type: string, id: string): Promise<VideoData[]> {
   const bearerToken = process.env.NEXT_PRIVATE_TMDB_API_KEY;
   const videosUrl = `https://api.themoviedb.org/3/${type}/${id}/videos`;
@@ -115,4 +79,76 @@ async function getVideos(type: string, id: string): Promise<VideoData[]> {
 
   const data = await response.json();
   return data.results;
+}
+
+async function getSeasonDetails(type: string, id: string, seasonNumber: number) {
+  const bearerToken = process.env.NEXT_PRIVATE_TMDB_API_KEY;
+  const url = `https://api.themoviedb.org/3/${type}/${id}/season/${seasonNumber}?language=en-US`;
+
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${bearerToken}`,
+      'accept': 'application/json'
+    },
+    next: { revalidate: 3600 }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch season details: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+export default async function DetailPage({ params }: DetailPageProps) {
+  let details: DetailsData;
+  let videos: VideoData[];
+
+  try {
+    [details, videos] = await Promise.all([
+      getDetails(params.type, params.id),
+      getVideos(params.type, params.id)
+    ]);
+  } catch (error) {
+    console.error('Error fetching details:', error);
+    notFound();
+  }
+
+  // Server Action for fetching season details
+  async function fetchSeasonDetails(formData: FormData) {
+    'use server'
+    const seasonNumber = Number(formData.get('seasonNumber'));
+    try {
+      return await getSeasonDetails(params.type, params.id, seasonNumber);
+    } catch (error) {
+      console.error('Error fetching season details:', error);
+      return null;
+    }
+  }
+
+  return (
+    <div >
+      <DetailPageWrapper
+        details={details}
+        videos={videos}
+      />
+      
+      <div className="pt-4 w-full px-2 md:px-8">
+        {params.type === 'tv' && details.seasons && (
+          <SeasonCarousel 
+            seasons={details.seasons} 
+            tmdbId={details.id}
+            fetchSeasonDetails={fetchSeasonDetails}
+          />
+        )}
+        
+        <CrewCarousel 
+          cast={details.credits.cast} 
+          crew={details.credits.crew}
+          isLoading={false} 
+          error={null} 
+        />
+      </div>
+    </div>
+  );
 }

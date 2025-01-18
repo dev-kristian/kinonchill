@@ -99,7 +99,8 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
   }
 
   return (
-    <div className="bg-gray-900/50 text-white py-2 rounded-3xl shadow-lg my-2">
+    <div className="bg-gradient-to-t from-transparent to-gray-900/50 text-white py-2 rounded-2xl shadow-lg my-2">
+      <div className='flex flex-col md:flex-row'>
       {title && <h2 className="md:text-2xl font-bold mb-2 px-4">{title}</h2>}
       <div className="flex flex-row gap-2 pl-2 md:px-4">
         {setMediaType && (
@@ -126,6 +127,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({
             </TabsList>
           </Tabs>
         )}
+      </div>
       </div>
       <div
         className="mx-2 overflow-x-auto md:p-2 cursor-grab active:cursor-grabbing no-scrollbar"

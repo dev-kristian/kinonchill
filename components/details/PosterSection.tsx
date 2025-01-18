@@ -1,7 +1,6 @@
-// components/PosterSection.tsx
 import React from 'react';
 import Image from 'next/image';
-import { FaYoutube, FaGlobe, FaImdb } from 'react-icons/fa';
+import { FaYoutube, FaGlobe, FaImdb, FaPlay } from 'react-icons/fa';
 import { BookmarkMinus, BookmarkPlus } from 'lucide-react';
 
 interface PosterSectionProps {
@@ -10,9 +9,11 @@ interface PosterSectionProps {
   trailer?: { key: string };
   homepage?: string;
   imdbId?: string;
+  id: number;
   isInWatchlist: boolean;
   onWatchlistClick: () => void;
   onTrailerClick: () => void;
+  onWatchClick: () => void;
 }
 
 const PosterSection: React.FC<PosterSectionProps> = ({
@@ -23,7 +24,8 @@ const PosterSection: React.FC<PosterSectionProps> = ({
   imdbId,
   isInWatchlist,
   onWatchlistClick,
-  onTrailerClick
+  onTrailerClick,
+  onWatchClick
 }) => {
   return (
     <div className="w-full md:w-1/3 lg:w-1/4">
@@ -76,8 +78,18 @@ const PosterSection: React.FC<PosterSectionProps> = ({
           ) : (
             <BookmarkPlus className="w-5 h-5" />
           )}
-          <span>{isInWatchlist ? 'Watchlist' : 'Watchlist'}</span>
+          <span>{isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}</span>
         </button>
+
+        {/* Watch Movie Button */}
+        <button
+          onClick={onWatchClick}
+          className="flex-grow py-2 px-4 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center space-x-2 transition-colors duration-300"
+        >
+          <FaPlay className="w-4 h-4" />
+          <span>Watch Now</span>
+        </button>
+
         {homepage && (
           <Button href={homepage} icon={FaGlobe} text="Website" />
         )}
@@ -89,7 +101,12 @@ const PosterSection: React.FC<PosterSectionProps> = ({
   );
 };
 
-const Button: React.FC<{ href: string; icon: React.ElementType; text: string; color?: string }> = ({ href, icon: Icon, text, color = 'white' }) => (
+const Button: React.FC<{ 
+  href: string; 
+  icon: React.ElementType; 
+  text: string; 
+  color?: string 
+}> = ({ href, icon: Icon, text, color = 'white' }) => (
   <a
     href={href}
     target="_blank"

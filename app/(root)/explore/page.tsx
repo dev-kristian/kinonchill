@@ -8,7 +8,7 @@ import AnimatedTitle from '@/components/AnimatedTitle';
 
 export default function Explore() {
   return (
-    <div className="container-6xl mx-2 md:mx-6 mt-4">
+    <div className="container-full mx-2 md:mx-4 mt-4">
       <AnimatedTitle>
         {(className) => (
           <>

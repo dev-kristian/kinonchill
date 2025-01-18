@@ -123,7 +123,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ movie, showMediaType = false 
         </div>
       </div>
 
-      <div className="bg-black/80  flex justify-between items-center px-2 py-1" onClick={handleWatchlistContainerClick}>
+      <div className="bg-black flex justify-between items-center px-2 py-1" onClick={handleWatchlistContainerClick}>
         {movie.watchlist_count !== undefined && movie.watchlist_count > 0 ? (
           <div className="flex items-center space-x-1">
             <Users className="text-muted-foreground" />

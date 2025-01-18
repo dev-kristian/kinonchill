@@ -1,4 +1,3 @@
-// components/DetailPageWrapper.tsx
 'use client'
 
 import React, { useState } from 'react';
@@ -7,6 +6,7 @@ import { DetailsData, VideoData } from '@/types/types';
 import { format } from 'date-fns';
 import { useUserData } from '@/context/UserDataContext';
 import YouTubeEmbed from './YoutubeEmbed';
+import FlickyEmbed from './FlickyEmbed'; 
 import DetailInfo from './DetailInfo';
 import PosterSection from './PosterSection';
 
@@ -17,7 +17,9 @@ interface DetailPageWrapperProps {
 
 const DetailPageWrapper: React.FC<DetailPageWrapperProps> = ({ details, videos }) => {
   const [showTrailer, setShowTrailer] = useState(false);
+  const [showFlickyEmbed, setShowFlickyEmbed] = useState(false); // New state
   const { userData, addToWatchlist, removeFromWatchlist } = useUserData();
+  
   const isMovie = 'title' in details;
   const title = isMovie ? details.title : details.name;
   const releaseDate = isMovie ? details.release_date : details.first_air_date;
@@ -60,9 +62,11 @@ const DetailPageWrapper: React.FC<DetailPageWrapperProps> = ({ details, videos }
             trailer={trailer}
             homepage={details.homepage}
             imdbId={isMovie ? details.imdb_id : undefined}
+            id={details.id}
             isInWatchlist={isInWatchlist ?? false}
             onWatchlistClick={handleWatchlistClick}
             onTrailerClick={() => setShowTrailer(true)}
+            onWatchClick={() => setShowFlickyEmbed(true)} // New prop
           />
           <div className="w-full md:w-2/3 lg:w-3/4 space-y-6 md:space-y-8">
             <DetailInfo
@@ -88,6 +92,14 @@ const DetailPageWrapper: React.FC<DetailPageWrapperProps> = ({ details, videos }
         <YouTubeEmbed 
           videoId={trailer.key} 
           onClose={() => setShowTrailer(false)} 
+        />
+      )}
+
+      {/* New Flicky Embed Modal */}
+      {showFlickyEmbed && isMovie && (
+        <FlickyEmbed 
+          tmdbId={details.id} 
+          onClose={() => setShowFlickyEmbed(false)} 
         />
       )}
     </div>
