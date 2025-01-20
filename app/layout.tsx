@@ -37,8 +37,8 @@ export default function RootLayout({
       <body className={`${inter.className} text-foreground `}>
         <AuthProvider>
           {children}
-          <Analytics/>
         </AuthProvider>
+        <Analytics/>
       </body>
     </html>
   )
