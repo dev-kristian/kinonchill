@@ -44,11 +44,13 @@ export interface DetailsData extends Media{
   budget: number;
   revenue: number;
   homepage: string;
-  imdb_id: string;
   spoken_languages: Array<{ english_name: string }>;
   vote_count: number;
   production_countries: Array<{ name: string }>;
   seasons?: Season[];
+  external_ids?: {
+    imdb_id?: string;
+  };
 }
 
 export interface Season {

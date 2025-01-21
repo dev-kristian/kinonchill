@@ -14,6 +14,7 @@ interface PosterSectionProps {
   onWatchlistClick: () => void;
   onTrailerClick: () => void;
   onWatchClick: () => void;
+  isMovie: boolean;
 }
 
 const PosterSection: React.FC<PosterSectionProps> = ({
@@ -22,6 +23,7 @@ const PosterSection: React.FC<PosterSectionProps> = ({
   trailer,
   homepage,
   imdbId,
+  isMovie,
   isInWatchlist,
   onWatchlistClick,
   onTrailerClick,
@@ -82,13 +84,15 @@ const PosterSection: React.FC<PosterSectionProps> = ({
         </button>
 
         {/* Watch Movie Button */}
-        <button
-          onClick={onWatchClick}
-          className="flex-grow py-2 px-4 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center space-x-2 transition-colors duration-300"
-        >
-          <FaPlay className="w-4 h-4" />
-          <span>Watch Now</span>
-        </button>
+        {isMovie && (
+          <button
+            onClick={onWatchClick}
+            className="flex-grow py-2 px-4 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center space-x-2 transition-colors duration-300"
+          >
+            <FaPlay className="w-4 h-4" />
+            <span>Watch Now</span>
+          </button>
+        )}
 
         {homepage && (
           <Button href={homepage} icon={FaGlobe} text="Website" />

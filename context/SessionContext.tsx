@@ -26,6 +26,10 @@ interface SessionContextType {
   removeMovieFromPoll: (sessionId: string, movieTitle: string) => Promise<void>;
   sessions: Session[];
 }
+interface UserDate {
+  date: Timestamp;
+  hours: 'all' | Timestamp[];
+}
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
@@ -47,36 +51,43 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const sessionsRef = collection(db, 'sessions');
       const newSessionRef = doc(sessionsRef);
-      const userDates = {
-        [userData.username]: dates.map(({ date, hours }) => ({
-          date: Timestamp.fromDate(date),
-          hours: hours === 'all' ? 'all' : hours.map(h => Timestamp.fromDate(new Date(date.setHours(h))))
-        }))
-      };
+      
+      // Use temporary date for initial client-side creation
+      const tempDate = new Date();
   
       await setDoc(newSessionRef, {
         createdAt: serverTimestamp(),
         createdBy: userData.username,
-        userDates: userDates,
+        userDates: {
+          [userData.username]: dates.map(({ date, hours }) => ({
+            date: Timestamp.fromDate(date),
+            hours: hours === 'all' ? 'all' : hours.map(h => {
+              const dateCopy = new Date(date);
+              dateCopy.setHours(h);
+              return Timestamp.fromDate(dateCopy);
+            })
+          }))
+        },
         status: 'active'
       });
   
-      const newSession: Session = {
+      // Return session with temporary date, will be updated by real-time listener
+      return {
         id: newSessionRef.id,
-        createdAt: new Date(),
+        createdAt: tempDate,
         createdBy: userData.username,
         userDates: {
           [userData.username]: dates.map(({ date, hours }) => ({
             date: date.toISOString(),
-            hours: hours === 'all' ? 'all' : hours.map(h => new Date(date.setHours(h)).toISOString())
+            hours: hours === 'all' ? 'all' : hours.map(h => {
+              const dateCopy = new Date(date);
+              dateCopy.setHours(h);
+              return dateCopy.toISOString();
+            })
           }))
         },
         status: 'active'
       };
-  
-      setSessions(prev => [newSession, ...prev]);
-  
-      return newSession;
     } catch (error) {
       console.error("Error creating session: ", error);
       throw error;
@@ -93,25 +104,37 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const sessionsList: Session[] = querySnapshot.docs.map(doc => {
         const data = doc.data();
+        
+        // Add null checks for createdAt
+        const createdAt = data.createdAt?.toDate() || new Date();
+      
+        // Safely handle userDates with optional chaining
+        const userDates = Object.entries(data.userDates || {}).map(([username, dates]) => {
+          const userDates = (dates as UserDate[]).map(({ date, hours }) => {
+            const dateISO = date?.toDate()?.toISOString() || new Date().toISOString();
+            const processedHours = hours === 'all' ? 'all' : 
+              (hours as Timestamp[])?.map(ts => ts?.toDate()?.toISOString()) || [];
+          
+            return {
+              date: dateISO,
+              hours: processedHours
+            };
+          });
+      
+          return [username, userDates];
+        });
+      
         return {
           id: doc.id,
-          createdAt: data.createdAt.toDate(),
-          createdBy: data.createdBy,
-          userDates: Object.fromEntries(
-            Object.entries(data.userDates).map(([username, dates]) => [
-              username,
-              (dates as { date: Timestamp; hours: Timestamp[] | 'all' }[]).map(({ date, hours }) => ({
-                date: date.toDate().toISOString(),
-                hours: hours === 'all' ? 'all' : (hours as Timestamp[]).map(ts => ts.toDate().toISOString())
-              }))
-            ])
-          ),
+          createdAt,
+          createdBy: data.createdBy || 'unknown',
+          userDates: Object.fromEntries(userDates),
           poll: data.poll ? {
             id: data.poll.id,
-            movieTitles: data.poll.movieTitles,
-            votes: data.poll.votes
+            movieTitles: data.poll.movieTitles || [],
+            votes: data.poll.votes || {}
           } : undefined,
-          status: data.status
+          status: data.status || 'active'
         };
       });
 

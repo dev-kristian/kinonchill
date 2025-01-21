@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useMemo, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -23,14 +23,68 @@ import {
   useOutsideClickHandler
 } from '@/utils/movieNightInvitationUtils';
 
+const SuggestionItem = memo(({ movie, onClick }: { 
+  movie: TopWatchlistItem; 
+  onClick: () => void 
+}) => (
+  <li
+    className="px-4 py-2 hover:bg-gray-700 cursor-pointer flex items-center"
+    onClick={onClick}
+  >
+    <Image 
+      src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+      alt={movie.title || ''}
+      width={32}
+      height={48}
+      className="object-cover mr-2"
+      loading="lazy"
+    />
+    <span>{movie.title}</span>
+  </li>
+));
+SuggestionItem.displayName = "SuggestionItem"; // Add display name
+
+const SelectedMovieItem = memo(({ 
+  movie, 
+  onRemove 
+}: { 
+  movie: TopWatchlistItem; 
+  onRemove: () => void 
+}) => (
+  <motion.li
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: 20 }}
+    className="flex items-center justify-between bg-gradient-to-r from-gray-800 to-pink-900/50 p-2 rounded-xl"
+  >
+    <div className="flex items-center">
+      <Image 
+        src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+        alt={movie.title || ''}
+        width={32}
+        height={48}
+        className="object-cover mr-2"
+        loading="lazy"
+      />
+      <span className="text-gray-300 truncate">{movie.title}</span>
+    </div>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onRemove}
+      className="text-gray-400 hover:text-white"
+    >
+      <FiX />
+    </Button>
+  </motion.li>
+));
+SelectedMovieItem.displayName = "SelectedMovieItem";
+
 export default function MovieNightInvitation() {
   const router = useRouter();
   const { toast } = useToast();
   const { userData, isLoading: userLoading } = useUserData();
-  const { 
-    createSession, 
-    createPoll, 
-  } = useSession();
+  const { createSession, createPoll } = useSession();
   const { sendInvitation, error: invitationError } = useSendInvitation();
   const [selectedDates, setSelectedDates] = useState<DateTimeSelection[]>([]);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -41,17 +95,17 @@ export default function MovieNightInvitation() {
   const [suggestions, setSuggestions] = useState<TopWatchlistItem[]>([]);
   const inputContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleCreateSession = () => {
+  const handleCreateSession = useCallback(() => {
     setShowCalendar(true);
-  };
+  }, []);
 
-  const handleDatesSelected = (dates: DateTimeSelection[]) => {
+  const handleDatesSelected = useCallback((dates: DateTimeSelection[]) => {
     setSelectedDates(dates);
-  };
+  }, []);
 
   useOutsideClickHandler(inputContainerRef, setSuggestions);
 
-  const completeSession = async () => {
+  const completeSession = useCallback(async () => {
     if (userLoading || !userData) {
       toast({
         title: "Error",
@@ -62,35 +116,25 @@ export default function MovieNightInvitation() {
     }
 
     try {
-      // Create the new session
       const newSession = await createSession(selectedDates);
-
-      // Create poll if movie titles exist
+      
       if (movieTitles.length > 0 && newSession) {
         await createPoll(newSession.id, movieTitles.map(movie => movie.title || ''));
       }
 
-      // Handle notifications if enabled
       if (sendNotification) {
         await sendInvitation();
-        if (invitationError) {
-          throw new Error(invitationError);
-        }
+        if (invitationError) throw new Error(invitationError);
       }
 
-      // Show success toast
       toast({
         title: "Session Created",
         description: "Your movie night session has been created successfully!",
       });
 
-      // Reset local state
       setShowCalendar(false);
       setSelectedDates([]);
-      setSendNotification(true);
       setMovieTitles([]);
-
-      // Route to the new session page
       router.push(`/sessions/${newSession.id}`);
 
     } catch (error) {
@@ -101,16 +145,25 @@ export default function MovieNightInvitation() {
         variant: "destructive",
       });
     }
-  };
+  }, [userLoading, userData, selectedDates, movieTitles, sendNotification, 
+      toast, createSession, createPoll, sendInvitation, invitationError, router]);
 
-  const renderSessionCreation = () => (
+  const handleAddMovie = useCallback(() => {
+    handleAddMovieTitle(inputMovieTitle, movieTitles, setMovieTitles, setInputMovieTitle);
+  }, [inputMovieTitle, movieTitles]);
+
+  const handleMovieInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    handleInputChange(e, setInputMovieTitle, topWatchlistItems, setSuggestions);
+  }, [topWatchlistItems]);
+
+  const sessionCreationContent = useMemo(() => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="space-y-4"
     >
-      <div className="bg-transparent p-2 md:p-4 rounded-lg flex flex-col lg:flex-row lg:space-x-4">
+      <div className="bg-transparent md:p-4 rounded-lg flex flex-col lg:flex-row lg:space-x-4">
         <div className="lg:w-2/3 mb-4 lg:mb-0">
           <h3 className="text-xl font-semibold mb-4 flex items-center">
             <FiCalendar className="mr-2" /> Select Date(s) (Optional)
@@ -129,7 +182,7 @@ export default function MovieNightInvitation() {
             <div className="flex flex-row items-center">
               <Input 
                 value={inputMovieTitle} 
-                onChange={(e) => handleInputChange(e, setInputMovieTitle, topWatchlistItems, setSuggestions)}
+                onChange={handleMovieInputChange}
                 placeholder="Enter movie title"
                 className="flex-grow"
               />
@@ -137,7 +190,7 @@ export default function MovieNightInvitation() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
-                      onClick={() => handleAddMovieTitle(inputMovieTitle, movieTitles, setMovieTitles, setInputMovieTitle)} 
+                      onClick={handleAddMovie}
                       className="bg-transparent hover:bg-transparent text-primary/70 md:text-white hover:text-primary/50 shadow-none"
                     >
                       Add Movie
@@ -152,20 +205,17 @@ export default function MovieNightInvitation() {
             {suggestions.length > 0 && (
               <ul className="absolute z-10 bg-gradient-to-b from-gray-800 to-pink-900 w-full mt-1 rounded-md shadow-lg top-full max-h-60 overflow-y-auto">
                 {suggestions.map((movie) => (
-                  <li 
-                    key={movie.id} 
-                    className="px-4 py-2 hover:bg-gray-700 cursor-pointer flex items-center"
-                    onClick={() => handleSuggestionClick(movie, setInputMovieTitle, movieTitles, setMovieTitles, setSuggestions)}
-                  >
-                    <Image 
-                      src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
-                      alt={movie.title || ''}
-                      width={32}
-                      height={48}
-                      className="object-cover mr-2"
-                    />
-                    <span>{movie.title}</span>
-                  </li>
+                  <SuggestionItem
+                    key={movie.id}
+                    movie={movie}
+                    onClick={() => handleSuggestionClick(
+                      movie,
+                      setInputMovieTitle,
+                      movieTitles,
+                      setMovieTitles,
+                      setSuggestions
+                    )}
+                  />
                 ))}
               </ul>
             )}
@@ -179,32 +229,11 @@ export default function MovieNightInvitation() {
                 className="grid grid-cols-1 gap-2 mt-4"
               >
                 {movieTitles.map((movie, index) => (
-                  <motion.li
+                  <SelectedMovieItem
                     key={movie.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="flex items-center justify-between bg-gradient-to-r from-gray-800 to-pink-900/50 p-2 rounded-xl"
-                  >
-                    <div className="flex items-center">
-                      <Image 
-                        src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
-                        alt={movie.title || ''}
-                        width={32}
-                        height={48}
-                        className="object-cover mr-2"
-                      />
-                      <span className="text-gray-300 truncate">{movie.title}</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeMovieTitle(index, movieTitles, setMovieTitles)}
-                      className="text-gray-400 hover:text-white"
-                    >
-                      <FiX />
-                    </Button>
-                  </motion.li>
+                    movie={movie}
+                    onRemove={() => removeMovieTitle(index, movieTitles, setMovieTitles)}
+                  />
                 ))}
               </motion.ul>
             )}
@@ -258,9 +287,11 @@ export default function MovieNightInvitation() {
           </Tooltip>
         </TooltipProvider>
       </div>
-    </motion.div>
-  );
-  
+      </motion.div>
+), [inputMovieTitle, suggestions, movieTitles, sendNotification, 
+    handleMovieInputChange, handleAddMovie, completeSession, 
+    selectedDates, handleDatesSelected]);
+
   return (
     <div className="bg-gradient-to-br from-gray-950 to-gray-900 p-2 rounded-2xl shadow-xl mx-auto">
       {!showCalendar ? (
@@ -280,7 +311,7 @@ export default function MovieNightInvitation() {
           </Button>
         </motion.div>
       ) : (
-        renderSessionCreation()
+        sessionCreationContent
       )}
     </div>
   );

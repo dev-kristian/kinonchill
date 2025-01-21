@@ -56,18 +56,19 @@ const DetailPageWrapper: React.FC<DetailPageWrapperProps> = ({ details, videos }
       <div className="absolute inset-0 bg-gradient-to-r from-black to-transparent"></div>
       <div className="relative z-10 container mx-auto px-4 py-8 md:py-16">
         <div className="flex flex-col md:flex-row items-start gap-8 md:gap-12">
-          <PosterSection
-            posterPath={details.poster_path || undefined}
-            title={title!}
-            trailer={trailer}
-            homepage={details.homepage}
-            imdbId={isMovie ? details.imdb_id : undefined}
-            id={details.id}
-            isInWatchlist={isInWatchlist ?? false}
-            onWatchlistClick={handleWatchlistClick}
-            onTrailerClick={() => setShowTrailer(true)}
-            onWatchClick={() => setShowFlickyEmbed(true)} // New prop
-          />
+        <PosterSection
+          posterPath={details.poster_path || undefined}
+          title={title!}
+          trailer={trailer}
+          homepage={details.homepage}
+          imdbId={details.external_ids?.imdb_id}  // Use external_ids for both types
+          id={details.id}
+          isMovie={isMovie}
+          isInWatchlist={isInWatchlist ?? false}
+          onWatchlistClick={handleWatchlistClick}
+          onTrailerClick={() => setShowTrailer(true)}
+          onWatchClick={() => setShowFlickyEmbed(true)}
+        />
           <div className="w-full md:w-2/3 lg:w-3/4 space-y-6 md:space-y-8">
             <DetailInfo
               title={title!}

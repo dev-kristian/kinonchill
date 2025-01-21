@@ -33,18 +33,20 @@ export function removeMovieTitle(
 export function handleInputChange(
   e: React.ChangeEvent<HTMLInputElement>,
   setInputMovieTitle: React.Dispatch<React.SetStateAction<string>>,
-  topWatchlistItems: { movie: TopWatchlistItem[] },
+  topWatchlistItems: { movie: TopWatchlistItem[]; tv: TopWatchlistItem[] }, // Add TV shows
   setSuggestions: React.Dispatch<React.SetStateAction<TopWatchlistItem[]>>
 ) {
   const value = e.target.value;
   setInputMovieTitle(value);
 
   if (value.length > 1) {
-    const movieSuggestions = topWatchlistItems.movie
+    // Combine movies and TV shows
+    const allSuggestions = [...topWatchlistItems.movie, ...topWatchlistItems.tv];
+    const filteredSuggestions = allSuggestions
       .filter((item) => item.title?.toLowerCase().includes(value.toLowerCase()))
-      .slice(0, 3); // Limit to 5 suggestions
+      .slice(0, 3);
 
-    setSuggestions(movieSuggestions);
+    setSuggestions(filteredSuggestions);
   } else {
     setSuggestions([]);
   }

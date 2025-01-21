@@ -1,4 +1,4 @@
-// DetailPage.tsx
+// C:\Users\Vivobook\Documents\dev-kristian\kinonchill\app\(root)\details\[type]\[id]\page.tsx
 import React from 'react';
 import { notFound } from 'next/navigation';
 import CrewCarousel from '@/components/details/CrewCarousel';
@@ -16,7 +16,7 @@ interface DetailPageProps {
 
 async function getDetails(type: string, id: string): Promise<DetailsData> {
   const bearerToken = process.env.NEXT_PRIVATE_TMDB_API_KEY;
-  const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?language=en-US`;
+  const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?language=en-US&append_to_response=external_ids`;
   const contentRatingsUrl = `https://api.themoviedb.org/3/${type}/${id}/content_ratings`;
   const creditsUrl = `https://api.themoviedb.org/3/${type}/${id}/credits`;
 

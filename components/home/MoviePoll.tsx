@@ -14,6 +14,7 @@ import {
 import { useSession } from '@/context/SessionContext';
 import { useUserData } from '@/context/UserDataContext';
 import { TopWatchlistItem, Session, Poll } from '@/types/types';
+import Link from 'next/link';
 
 interface MoviePollProps {
   session: Session;
@@ -64,7 +65,7 @@ const MoviePoll: React.FC<MoviePollProps> = ({ session, poll }) => {
   const getMovieDetails = (title: string) => {
     return (
       topWatchlistItems.movie.find((item) => item.title === title) ||
-      topWatchlistItems.tv.find((item) => item.name === title)
+      topWatchlistItems.tv.find((item) => item.name === title || item.title === title)
     );
   };
 
@@ -143,8 +144,14 @@ const MoviePoll: React.FC<MoviePollProps> = ({ session, poll }) => {
                   className="object-cover rounded"
                 />
               )}
-                <div>
+              <div>
+                <Link 
+                  href={`/details/${movieInfo?.media_type || 'movie'}/${movieInfo?.id}`}
+                  className="hover:text-primary transition-colors"
+                  onClick={(e) => e.stopPropagation()} // Prevent vote toggle when clicking the link
+                >
                   <h4 className="font-semibold text-lg">{title}</h4>
+                </Link>
                   {movieInfo && (
                     <div className="text-xs text-gray-300 mt-1 flex flex-wrap items-center">
                       <span className="mr-3 flex items-center">
@@ -152,11 +159,13 @@ const MoviePoll: React.FC<MoviePollProps> = ({ session, poll }) => {
                         {movieInfo.vote_average?.toFixed(1) || 'N/A'}
                       </span>
                       <span className="mr-3 flex items-center">
-                        <Calendar className="w-3 h-3 mr-1" />
-                        {movieInfo.release_date
-                          ? format(new Date(movieInfo.release_date), 'yyyy')
-                          : 'Unknown'}
-                      </span>
+                    <Calendar className="w-3 h-3 mr-1" />
+                    {(() => {
+                      const date = movieInfo.release_date || movieInfo.first_air_date;
+                      return date ? format(new Date(date), 'yyyy') : 'Unknown';
+                    })()}
+                  </span>
+
                       <span className="mr-3 flex items-center">
                         <Users className="w-3 h-3 mr-1" />
                         {movieInfo.watchlist_count || 0} in watchlist
