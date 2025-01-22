@@ -1,5 +1,4 @@
 // app/(root)/search/[searchquery]/SearchResultsContent.tsx
-
 'use client'
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

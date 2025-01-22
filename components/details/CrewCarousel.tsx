@@ -85,7 +85,7 @@ const CrewCarousel: React.FC<CrewCarouselProps> = ({ cast, crew, isLoading, erro
           ))}
           {isLoading && (
             <div className="flex-none w-40 flex justify-center items-center">
-              <Spinner size="md" />
+              <Spinner />
             </div>
           )}
         </div>

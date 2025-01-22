@@ -23,13 +23,14 @@ async function getSearchResults(query: string) {
 
 export default async function SearchResultsPage({ params }: SearchResultsPageProps) {
   const { searchquery } = params;
+  const decodedQuery = decodeURIComponent(searchquery);
   const searchResults = await getSearchResults(searchquery);
 
   return (
     <div className="container mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-primary">
-          Search Results for &ldquo;{searchquery}&rdquo;
+      <div className="flex justify-between items-center py-8">
+        <h1 className="text-4xl font-bold">
+          Search Results for &ldquo;<span className="text-pink-500">{decodedQuery}</span>&rdquo;
         </h1>
         <Link href="/explore">
           <Button variant="outline">

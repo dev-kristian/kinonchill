@@ -1,10 +1,10 @@
 'use client'
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import AnimatedTitle from '../AnimatedTitle';
 
 interface SearchComponentProps {
   className?: string;
@@ -12,80 +12,77 @@ interface SearchComponentProps {
 
 const SearchComponent: React.FC<SearchComponentProps> = ({ className }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    router.push(`/search/${encodeURIComponent(searchQuery)}`);
+    
+    setIsLoading(true);
+    
+    try {
+      // Add a slight delay to ensure the loading state is visible
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await router.push(`/search/${encodeURIComponent(searchQuery)}`);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      // We'll keep the loading state until the navigation completes
+      setTimeout(() => setIsLoading(false), 1000);
+    }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (formRef.current && !formRef.current.contains(event.target as Node)) {
-        setIsExpanded(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
   return (
-    <form onSubmit={handleSearch} className={`${className} w-full`} ref={formRef}>
-      <div className="flex flex-col space-y-2">
-        <div className="relative">
+    <form onSubmit={handleSearch} className={`${className} w-full`}>
+      <div className="container mx-auto flex flex-col items-center space-y-2">
+        <AnimatedTitle>
+          {(className) => (
+            <div className="text-center">
+              <span className={className}>Explore </span>
+              <span className="text-primary/50">Movies</span>
+              <span className={className}> and </span>
+              <span className="text-primary/50">TV Shows</span>
+            </div>
+          )}
+        </AnimatedTitle>
+        <div className="relative w-full">
           <Input
-            ref={inputRef}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setIsExpanded(true)}
             placeholder="Search for movies, TV shows, or people..."
+            disabled={isLoading}
             className="w-full bg-background-light text-foreground placeholder-muted-foreground border-none focus:ring-2 focus:ring-primary rounded-full truncated"
           />
           <Button 
             type="submit" 
-            className="absolute right-0 top-1/2 transform -translate-y-1/2  bg-primary/50 hover:bg-primary/70 text-primary-foreground transition-all duration-300 rounded-full px-2 md:px-4"
+            disabled={isLoading}
+            aria-disabled={isLoading}
+            className={`
+              absolute right-0 top-1/2 transform -translate-y-1/2 
+              bg-primary/50 hover:bg-primary/70 text-primary-foreground 
+              transition-all duration-300 rounded-full px-2 md:px-4
+              disabled:opacity-50 disabled:cursor-not-allowed
+              flex items-center justify-center
+            `}
           >
-            <Search className="w-4 h-4" />
-            <span className="ml-2 text-sm">Search</span>
+            <div className="flex items-center space-x-2">
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Searching...</span>
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4" />
+                  <span>Search</span>
+                </>
+              )}
+            </div>
           </Button>
         </div>
       </div>
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            className="text-muted-foreground text-sm mt-2 space-y-1"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <p>Try searching for:</p>
-            <div className="flex flex-wrap gap-2">
-              {['Inception', 'Breaking Bad', 'Tom Hanks'].map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery(suggestion);
-                    inputRef.current?.focus();
-                  }}
-                  className="px-2 py-1 bg-background-light text-muted-foreground hover:bg-primary/70 rounded-full text-xs hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </form>
   );
 };
