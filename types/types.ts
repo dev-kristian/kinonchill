@@ -125,7 +125,7 @@ export interface NotificationSubscriptionUIProps {
   handleUpdateNotificationStatus: (status: NotificationStatus) => Promise<void>;
   handleSubscribe: () => Promise<void>;
 }
-// Example Session interface, make sure it's exported from your types file
+
 export interface Poll {
   id: string;
   movieTitles: string[];

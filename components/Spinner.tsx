@@ -1,22 +1,34 @@
-import React from 'react';
+'use client';
 
-interface SpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
+import React from 'react';
+import dynamic from 'next/dynamic';
+import searchingAnimation from '@/public/icons/searching.json';
+
+// Dynamically import Lottie with ssr set to false
+const LottiePlayer = dynamic(() => import('lottie-react'), { 
+  ssr: true 
+});
+
+interface LoaderProps {
+  size?: number;
   className?: string;
 }
 
-const Spinner: React.FC<SpinnerProps> = ({ size = 'md', className = '' }) => {
-  const sizeClasses = {
-    sm: 'w-4 h-4 border-2',
-    md: 'w-6 h-6 border-2',
-    lg: 'w-8 h-8 border-3',
-  };
-
+const Spinner: React.FC<LoaderProps> = ({ 
+  size = 200, 
+  className = '' 
+}) => {
   return (
-    <div className={`inline-block ${className}`} role="status" aria-label="loading">
-      <div
-        className={`animate-spin rounded-full border-primary border-t-transparent ${sizeClasses[size]}`}
-      ></div>
+    <div className={`flex items-center justify-center ${className}`}>
+      <LottiePlayer
+        animationData={searchingAnimation}
+        loop
+        autoplay
+        style={{ 
+          width: size, 
+          height: size 
+        }}
+      />
     </div>
   );
 };

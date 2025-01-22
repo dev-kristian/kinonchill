@@ -3,7 +3,7 @@
 'use client'
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import MoviePoster from '@/components/MoviePoster';
+import MoviePoster from '@/components/MediaPoster';
 import { Media } from '@/types/types';
 
 interface SearchResultsContentProps {
@@ -29,7 +29,7 @@ export default function SearchResultsContent({ results }: SearchResultsContentPr
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3 }}
             >
-              <MoviePoster movie={movie} showMediaType={true} />
+              <MoviePoster media={movie} showMediaType={true} />
             </motion.div>
           ))}
         </motion.div>

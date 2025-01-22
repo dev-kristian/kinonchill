@@ -114,7 +114,7 @@ export const TopWatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ 
   return (
     <TopWatchlistContext.Provider value={{ 
       topWatchlistItems, 
-      setTopWatchlistItems, // Add this line
+      setTopWatchlistItems, 
       isLoading, 
       error, 
       fetchTopWatchlistItems,

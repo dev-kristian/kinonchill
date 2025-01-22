@@ -1,14 +1,24 @@
 // components/TrendingSection.tsx
 import React from 'react';
 import { useTrending } from '@/context/TrendingContext';
-import MediaCarousel from '@/components/MediaCarousel';
+import MediaInfinite from '@/components/MediaInfinite';
+import Spinner from '../Spinner';
 
 const TrendingSection: React.FC = () => {
-  const { trendingState, mediaType, timeWindow, setMediaType, setTimeWindow, fetchTrending } = useTrending();
+  const { trendingState, mediaType, timeWindow, isInitialLoading, setMediaType, setTimeWindow, fetchTrending } = useTrending();
   const { data, isLoading, error } = trendingState;
 
+  if (isInitialLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Spinner  />
+      </div>
+    );
+  }
+
   return (
-    <MediaCarousel
+    <div>
+    <MediaInfinite
       title="Trending"
       items={data}
       isLoading={isLoading}
@@ -19,7 +29,10 @@ const TrendingSection: React.FC = () => {
       timeWindow={timeWindow}
       setTimeWindow={setTimeWindow}
     />
+    </div>
+
   );
 };
+
 
 export default TrendingSection;

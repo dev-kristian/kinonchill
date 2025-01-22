@@ -38,7 +38,7 @@ export default async function SearchResultsPage({ params }: SearchResultsPagePro
         </Link>
       </div>
 
-      <Suspense fallback={<Spinner size="lg" />}>
+      <Suspense fallback={<Spinner />}>
         <SearchResultsContent results={searchResults.results} />
       </Suspense>
     </div>

@@ -2,8 +2,6 @@
 import React from 'react';
 import SearchComponent from '@/components/explore/SearchComponent';
 import TrendingSection from '@/components/explore/TrendingSection';
-import MovieListSection from '@/components/explore/MovieListSection';
-import TvListSection from '@/components/explore/TvListSection';
 import AnimatedTitle from '@/components/AnimatedTitle';
 
 export default function Explore() {
@@ -21,8 +19,6 @@ export default function Explore() {
       </AnimatedTitle>
       <SearchComponent className="mb-8" />
       <TrendingSection />
-      <MovieListSection />
-      <TvListSection />
     </div>
   );
 }

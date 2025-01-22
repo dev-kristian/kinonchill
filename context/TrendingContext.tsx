@@ -12,19 +12,11 @@ interface MediaState {
 
 interface TrendingContextType {
   trendingState: MediaState;
-  movieListState: MediaState;
-  tvListState: MediaState;
   mediaType: 'movie' | 'tv';
   timeWindow: 'day' | 'week';
-  movieListType: 'popular' | 'top_rated';
-  tvListType: 'popular' | 'top_rated';
   setMediaType: (type: 'movie' | 'tv') => void;
   setTimeWindow: (window: 'day' | 'week') => void;
-  setMovieListType: (type: 'popular' | 'top_rated') => void;
-  setTvListType: (type: 'popular' | 'top_rated') => void;
   fetchTrending: () => Promise<void>;
-  fetchMovieList: () => Promise<void>;
-  fetchTvList: () => Promise<void>;
 }
 
 const TrendingContext = createContext<TrendingContextType | undefined>(undefined);
@@ -40,30 +32,13 @@ export const useTrending = () => {
 export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mediaType, setMediaType] = useState<'movie' | 'tv'>('movie');
   const [timeWindow, setTimeWindow] = useState<'day' | 'week'>('day');
-  const [movieListType, setMovieListType] = useState<'popular' | 'top_rated'>('popular');
-  const [tvListType, setTvListType] = useState<'popular' | 'top_rated'>('popular');
   const cache = useRef<Record<string, MediaState>>({});
-  const initialFetchMade = useRef({ trending: false, movieList: false, tvList: false });
+  const initialFetchMade = useRef({ trending: false });
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const getCacheKey = (prefix: string, ...params: string[]) => `${prefix}-${params.join('-')}`;
-
+  
   const [trendingState, setTrendingState] = useState<MediaState>({
-    data: [],
-    page: 0,
-    isLoading: false,
-    error: null,
-    hasMore: true,
-  });
-
-  const [movieListState, setMovieListState] = useState<MediaState>({
-    data: [],
-    page: 0,
-    isLoading: false,
-    error: null,
-    hasMore: true,
-  });
-
-  const [tvListState, setTvListState] = useState<MediaState>({
     data: [],
     page: 0,
     isLoading: false,
@@ -86,9 +61,7 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return { ...prev, isLoading: true, error: null };
     });
 
-    const nextPage = resetPage ? 1 : (setState === setTrendingState ? trendingState.page : 
-                                      setState === setMovieListState ? movieListState.page : 
-                                      tvListState.page) + 1;
+    const nextPage = resetPage ? 1 : trendingState.page + 1;
 
     try {
       const response = await fetch(`/api/${endpoint}`, {
@@ -104,13 +77,23 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const resultsWithWatchlistCounts = await Promise.all(
         data.results.map(async (item: Media) => ({
           ...item,
-          watchlist_count: await getWatchlistCount(item.id, item.media_type || (endpoint === 'tv-list' ? 'tv' : 'movie')),
+          watchlist_count: await getWatchlistCount(item.id, item.media_type || 'movie'),
         }))
       );
 
       setState(prev => {
+        // Create a Set of existing item IDs to prevent duplicates
+        const existingIds = new Set(prev.data.map(item => `${item.id}-${item.media_type}`));
+        
+        // Filter out duplicates before adding new items
+        const filteredResults = resultsWithWatchlistCounts.filter(item => 
+          !existingIds.has(`${item.id}-${item.media_type}`)
+        );
+    
         const newState = {
-          data: resetPage ? resultsWithWatchlistCounts : [...prev.data, ...resultsWithWatchlistCounts],
+          data: resetPage 
+            ? resultsWithWatchlistCounts 
+            : [...prev.data, ...filteredResults],
           page: nextPage,
           isLoading: false,
           error: null,
@@ -128,19 +111,11 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isLoading: false,
       }));
     }
-  }, [getWatchlistCount, trendingState.page, movieListState.page, tvListState.page]);
+  }, [getWatchlistCount, trendingState.page]);
 
   const fetchTrending = useCallback((resetPage: boolean = false) => 
     fetchData('trending', setTrendingState, { mediaType, timeWindow }, resetPage),
   [fetchData, mediaType, timeWindow]);
-
-  const fetchMovieList = useCallback((resetPage: boolean = false) => 
-    fetchData('movie-list', setMovieListState, { type: movieListType }, resetPage),
-  [fetchData, movieListType]);
-
-  const fetchTvList = useCallback((resetPage: boolean = false) => 
-    fetchData('tv-list', setTvListState, { type: tvListType }, resetPage),
-  [fetchData, tvListType]);
 
   const handleSetMediaType = useCallback((type: 'movie' | 'tv') => {
     if (type !== mediaType) {
@@ -180,79 +155,39 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [mediaType, timeWindow]);
 
-  const handleSetMovieListType = useCallback((type: 'popular' | 'top_rated') => {
-    if (type !== movieListType) {
-      setMovieListType(type);
-      const cacheKey = getCacheKey('movie-list', type);
-      if (cache.current[cacheKey]) {
-        setMovieListState(cache.current[cacheKey]);
-      } else {
-        setMovieListState({
-          data: [],
-          page: 0,
-          isLoading: false,
-          error: null,
-          hasMore: true,
-        });
-        initialFetchMade.current.movieList = false;
-      }
-    }
-  }, [movieListType]);
-
-  const handleSetTvListType = useCallback((type: 'popular' | 'top_rated') => {
-    if (type !== tvListType) {
-      setTvListType(type);
-      const cacheKey = getCacheKey('tv-list', type);
-      if (cache.current[cacheKey]) {
-        setTvListState(cache.current[cacheKey]);
-      } else {
-        setTvListState({
-          data: [],
-          page: 0,
-          isLoading: false,
-          error: null,
-          hasMore: true,
-        });
-        initialFetchMade.current.tvList = false;
-      }
-    }
-  }, [tvListType]);
-
   useEffect(() => {
     if (!initialFetchMade.current.trending && trendingState.data.length === 0 && trendingState.hasMore) {
+      setIsInitialLoading(true);
       initialFetchMade.current.trending = true;
-      fetchTrending(true);
+      fetchTrending(true)
+        .finally(() => setIsInitialLoading(false));
     }
-    if (!initialFetchMade.current.movieList && movieListState.data.length === 0 && movieListState.hasMore) {
-      initialFetchMade.current.movieList = true;
-      fetchMovieList(true);
-    }
-    if (!initialFetchMade.current.tvList && tvListState.data.length === 0 && tvListState.hasMore) {
-      initialFetchMade.current.tvList = true;
-      fetchTvList(true);
-    }
-  }, [trendingState, movieListState, tvListState, fetchTrending, fetchMovieList, fetchTvList]);
+  }, [trendingState, fetchTrending]);
 
   return (
     <TrendingContext.Provider 
       value={{ 
         trendingState, 
-        movieListState,
-        tvListState,
         mediaType, 
         timeWindow, 
-        movieListType,
-        tvListType,
+        isInitialLoading,
         setMediaType: handleSetMediaType, 
         setTimeWindow: handleSetTimeWindow, 
-        setMovieListType: handleSetMovieListType,
-        setTvListType: handleSetTvListType,
-        fetchTrending: () => fetchTrending(false),
-        fetchMovieList: () => fetchMovieList(false),
-        fetchTvList: () => fetchTvList(false)
+        fetchTrending: () => fetchTrending(false)
       }}
     >
       {children}
     </TrendingContext.Provider>
   );
 };
+
+// Update the context interface
+interface TrendingContextType {
+  trendingState: MediaState;
+  mediaType: 'movie' | 'tv';
+  timeWindow: 'day' | 'week';
+  isInitialLoading: boolean;
+  setMediaType: (type: 'movie' | 'tv') => void;
+  setTimeWindow: (window: 'day' | 'week') => void;
+  fetchTrending: () => Promise<void>;
+}
