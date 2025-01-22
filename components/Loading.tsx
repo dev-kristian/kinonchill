@@ -4,9 +4,9 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 
 // Import JSON files using ES6 imports
-import defaultSpinner from '@/public/icons/Loading.json';
-import minimalSpinner from '@/public/icons/Loading.json';
-import fullSpinner from '@/public/icons/Loading.json';
+import defaultSpinner from '@/public/icons/loading.json';
+import minimalSpinner from '@/public/icons/loading.json';
+import fullSpinner from '@/public/icons/loading.json';
 
 // Dynamically import Lottie with ssr set to false
 const LottiePlayer = dynamic(() => import('lottie-react'), { 
