@@ -6,7 +6,7 @@ import { DetailsData, VideoData } from '@/types/types';
 import { format } from 'date-fns';
 import { useUserData } from '@/context/UserDataContext';
 import YouTubeEmbed from './YoutubeEmbed';
-import FlickyEmbed from './FlickyEmbed'; 
+import FlickyEmbed from './HostEmbed'; 
 import DetailInfo from './DetailInfo';
 import PosterSection from './PosterSection';
 
@@ -54,7 +54,7 @@ const DetailPageWrapper: React.FC<DetailPageWrapperProps> = ({ details, videos }
         />
       </div>
       <div className="absolute inset-0 bg-gradient-to-r from-black to-transparent"></div>
-      <div className="relative z-10 container mx-auto px-4 py-8 md:py-16">
+      <div className="relative container mx-auto px-4 py-8 md:py-16">
         <div className="flex flex-col md:flex-row items-start gap-8 md:gap-12">
         <PosterSection
           posterPath={details.poster_path || undefined}

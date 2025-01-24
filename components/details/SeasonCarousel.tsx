@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import FlickyEmbed from '@/components/details/FlickyEmbed';
+import FlickyEmbed from '@/components/details/HostEmbed';
 import { Season, SeasonDetails } from '@/types/types';
 
 interface SeasonCarouselProps {
@@ -11,7 +11,12 @@ interface SeasonCarouselProps {
   tmdbId: number;
   fetchSeasonDetails: (formData: FormData) => Promise<SeasonDetails | null>;
 }
-
+interface SelectedEpisode {
+  seasonNumber: number;
+  episodeNumber: number;
+  seasonId: number;
+  episodeId: number;
+}
 const SeasonCarousel: React.FC<SeasonCarouselProps> = ({ 
   seasons, 
   tmdbId,
@@ -19,10 +24,7 @@ const SeasonCarousel: React.FC<SeasonCarouselProps> = ({
 }) => {
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [selectedSeasonDetails, setSelectedSeasonDetails] = useState<SeasonDetails | null>(null);
-  const [selectedEpisode, setSelectedEpisode] = useState<{
-    seasonNumber: number;
-    episodeNumber: number;
-  } | null>(null);
+  const [selectedEpisode, setSelectedEpisode] = useState<SelectedEpisode | null>(null);
 
   const handleSeasonSelect = async (seasonNumber: number) => {
     // Toggle off if clicking the same season
@@ -45,7 +47,16 @@ const SeasonCarousel: React.FC<SeasonCarouselProps> = ({
   };
 
   const handleWatchNow = (seasonNumber: number, episodeNumber: number) => {
-    setSelectedEpisode({ seasonNumber, episodeNumber });
+    const episode = selectedSeasonDetails?.episodes.find(
+      ep => ep.episode_number === episodeNumber
+    );
+    
+    setSelectedEpisode({
+      seasonNumber,
+      episodeNumber,
+      seasonId: selectedSeasonDetails?.id || 0,
+      episodeId: episode?.id || 0
+    });
   };
 
   const handleCloseEmbed = () => {
@@ -53,7 +64,31 @@ const SeasonCarousel: React.FC<SeasonCarouselProps> = ({
   };
 
   const validSeasons = seasons.filter(season => season.episode_count > 0);
+  const handleNavigateEpisode = (direction: 'next' | 'prev') => {
+    if (!selectedEpisode || !selectedSeasonDetails) return;
 
+    const currentIndex = selectedSeasonDetails.episodes.findIndex(
+      ep => ep.episode_number === selectedEpisode.episodeNumber
+    );
+
+    if (direction === 'next' && currentIndex < selectedSeasonDetails.episodes.length - 1) {
+      const nextEpisode = selectedSeasonDetails.episodes[currentIndex + 1];
+      setSelectedEpisode({
+        seasonNumber: selectedEpisode.seasonNumber,
+        episodeNumber: nextEpisode.episode_number,
+        seasonId: selectedSeasonDetails.id,
+        episodeId: nextEpisode.id
+      });
+    } else if (direction === 'prev' && currentIndex > 0) {
+      const prevEpisode = selectedSeasonDetails.episodes[currentIndex - 1];
+      setSelectedEpisode({
+        seasonNumber: selectedEpisode.seasonNumber,
+        episodeNumber: prevEpisode.episode_number,
+        seasonId: selectedSeasonDetails.id,
+        episodeId: prevEpisode.id
+      });
+    }
+  };
   return (
     <div className="w-full pb-4">
       <motion.div 
@@ -256,12 +291,16 @@ const SeasonCarousel: React.FC<SeasonCarouselProps> = ({
 
       {/* FlickyEmbed Component */}
       {selectedEpisode && (
-        <FlickyEmbed
-          tmdbId={tmdbId}
-          seasonNumber={selectedEpisode.seasonNumber}
-          episodeNumber={selectedEpisode.episodeNumber}
-          onClose={handleCloseEmbed}
-        />
+      <FlickyEmbed
+      tmdbId={tmdbId}
+      seasonNumber={selectedEpisode.seasonNumber}
+      episodeNumber={selectedEpisode.episodeNumber}
+      seasonId={selectedEpisode.seasonId}
+      episodeId={selectedEpisode.episodeId}
+      onClose={handleCloseEmbed}
+      totalEpisodes={selectedSeasonDetails?.episodes.length}
+      onNavigateEpisode={handleNavigateEpisode}
+    />
       )}
     </div>
   );

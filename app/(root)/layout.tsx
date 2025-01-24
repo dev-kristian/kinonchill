@@ -24,9 +24,9 @@ function RootLayout({
             <SessionProvider>
               <div className="flex flex-col min-h-screen">
                 <Navigation />
-                <main className="flex-grow">
+                <main className=" py-12">
                   <Suspense fallback={
-                    <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center ">
                       <Loading 
                         message="Preparing your experience" 
                         spinnerType="full" 

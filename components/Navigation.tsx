@@ -1,54 +1,41 @@
-//components/Navigation.tsx
-
 'use client'
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { auth } from '@/lib/firebase';
-
-// Icon components
-const MenuIcons = {
-  Home: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    </svg>
-  ),
-  Sessions: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  ),
-  Explore: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-  ),
-  SignOut: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-    </svg>
-  ),
-  SignIn: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-    </svg>
-  ),
-  ChevronDown: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-  )
-};
+import { 
+  Home,
+  Clock,
+  Search,
+  LogOut,
+  LogIn,
+  ChevronDown,
+  Menu,
+  X,
+  User as UserIcon
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -64,173 +51,195 @@ export default function Navigation() {
     const handleClickOutside = (e: MouseEvent) => {
       if (!(e.target as Element).closest('.nav-container')) {
         setIsOpen(false);
+        setIsDropdownOpen(false);
       }
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  const isActivePath = (path: string) => pathname === path;
+
   return (
-    <nav className="bg-background/95 backdrop-blur-sm border-b border-accent/10 shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 relative nav-container">
+  <nav className={`fixed w-full z-10 py-1 h-[var(--navbar-height)] transition-all duration-300 ${
+    scrolled ? 'bg-background/80 backdrop-blur-md shadow-lg' : 'bg-background/50 backdrop-blur-sm'
+  }`}>
+      <div className="mx-auto px-4">
+        <div className="flex justify-between items-center relative nav-container">
           {/* Logo */}
           <Link 
             href="/" 
             className="flex items-center space-x-2 group"
             onClick={() => setIsOpen(false)}
           >
-            <Image 
-              src="/icons/popcorn.png" 
-              alt="Popcorn icon" 
-              width={36}
-              height={36}
-              className="transition-transform group-hover:scale-110"
-            />
-            <span className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Image 
+                src="/icons/popcorn.png" 
+                alt="Popcorn icon" 
+                width={24}
+                height={24}
+                className="transition-transform"
+              />
+            </motion.div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent hover:opacity-80 transition-opacity">
               Kino & Chill
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/" 
-              className="flex items-center space-x-2 text-foreground/90 hover:text-accent transition-colors duration-200 font-medium"
-            >
-              {MenuIcons.Home}
-              <span>Home</span>
-            </Link>
-            <Link 
-              href="/sessions" 
-              className="flex items-center space-x-2 text-foreground/90 hover:text-accent transition-colors duration-200 font-medium"
-            >
-              {MenuIcons.Sessions}
-              <span>Sessions</span>
-            </Link>
-            <Link 
-              href="/explore" 
-              className="flex items-center space-x-2 text-foreground/90 hover:text-accent transition-colors duration-200 font-medium"
-            >
-              {MenuIcons.Explore}
-              <span>Explore</span>
-            </Link>
+          <div className="hidden md:flex items-center space-x-4">
+            {[
+              { href: '/', icon: Home, label: 'Home' },
+              { href: '/sessions', icon: Clock, label: 'Sessions' },
+              { href: '/explore', icon: Search, label: 'Explore' },
+            ].map(({ href, icon: Icon, label }) => (
+              <Link 
+                key={href}
+                href={href} 
+                className={`flex items-center space-x-2 px-3 py-2 rounded-3xl transition-all duration-200 
+                  ${isActivePath(href) 
+                    ? 'text-accent' 
+                    : 'text-foreground/90 hover:text-accent '}`}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="font-medium">{label}</span>
+              </Link>
+            ))}
             
             {user ? (
               <div className="relative ml-4">
-                <button 
+                <motion.button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-2 focus:outline-none"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center">
                     {user.photoURL ? (
                       <Image
                         src={user.photoURL}
                         alt="User avatar"
-                        width={36}
-                        height={36}
-                        className="rounded-full"
+                        width={24}
+                        height={24}
+                        className="rounded-full hover:opacity-80 transition-opacity"
                       />
                     ) : (
-                      <span className="text-accent">👤</span>
+                      <UserIcon className="h-5 w-5 text-accent" />
                     )}
-                  </div>
-                  {MenuIcons.ChevronDown}
-                </button>
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </motion.button>
                 
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-background border border-accent/10 rounded-lg shadow-lg py-1">
-                    <button
-                      onClick={handleSignOut}
-                      className="flex items-center space-x-2 w-full px-4 py-2 text-left text-foreground/90 hover:bg-accent/5 transition-colors"
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute right-0 p-2 w-48 bg-background border border-accent/10 rounded-lg shadow-lg py-1 overflow-hidden"
                     >
-                      {MenuIcons.SignOut}
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                )}
+                      <button
+                        onClick={handleSignOut}
+                        className="flex items-center space-x-2 rounded-xl w-full px-4 py-2 text-left text-foreground/90 hover:bg-accent/5 transition-colors"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        <span>Sign Out</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
-              <Link
-                href="/signin"
-                className="ml-4 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors duration-200 flex items-center space-x-2"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {MenuIcons.SignIn}
-                <span>Sign In</span>
-              </Link>
+                <Link
+                  href="/signin"
+                  className="ml-4 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg"
+                >
+                  <LogIn className="h-5 w-5" />
+                  <span>Sign In</span>
+                </Link>
+              </motion.div>
             )}
           </div>
 
           {/* Mobile Menu Button */}
-          <button
+          <motion.button
             className="md:hidden p-2 rounded-lg hover:bg-accent/10 transition-colors"
             onClick={() => setIsOpen(!isOpen)}
+            whileTap={{ scale: 0.9 }}
             aria-label="Toggle navigation menu"
           >
             {isOpen ? (
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="h-6 w-6" />
             ) : (
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-              </svg>
+              <Menu className="h-6 w-6" />
             )}
-          </button>
+          </motion.button>
         </div>
       </div>
 
       {/* Mobile Navigation */}
-      {isOpen && (
-        <div className="md:hidden absolute w-full bg-background/95 backdrop-blur-sm border-b border-accent/10 shadow-lg">
-          <div className="px-4 pt-2 pb-4 space-y-2">
-            <Link 
-              href="/" 
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent/5 transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              {MenuIcons.Home}
-              <span>Home</span>
-            </Link>
-            <Link 
-              href="/sessions" 
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent/5 transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              {MenuIcons.Sessions}
-              <span>Sessions</span>
-            </Link>
-            <Link 
-              href="/explore" 
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent/5 transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              {MenuIcons.Explore}
-              <span>Explore</span>
-            </Link>
-            <div className="border-t border-accent/10 pt-2 mt-2">
-              {user ? (
-                <button
-                  onClick={handleSignOut}
-                  className="w-full flex items-center space-x-3 px-4 py-3 text-left rounded-lg hover:bg-accent/5 transition-colors"
-                >
-                  {MenuIcons.SignOut}
-                  <span>Sign Out</span>
-                </button>
-              ) : (
-                <Link
-                  href="/signin"
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-accent text-white hover:bg-accent/90 transition-colors"
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden absolute w-full bg-background rounded-b-xl shadow-lg overflow-hidden"
+          >
+            <div className="px-2 pt-2 pb-2 space-y-2">
+              {[
+                { href: '/', icon: Home, label: 'Home' },
+                { href: '/sessions', icon: Clock, label: 'Sessions' },
+                { href: '/explore', icon: Search, label: 'Explore' },
+              ].map(({ href, icon: Icon, label }) => (
+                <Link 
+                  key={href}
+                  href={href} 
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
+                    ${isActivePath(href) 
+                      ? 'bg-accent/10 text-accent shadow-sm' 
+                      : 'hover:bg-accent/5'}`}
                   onClick={() => setIsOpen(false)}
                 >
-                  {MenuIcons.SignIn}
-                  <span>Sign In</span>
+                  <Icon className="h-5 w-5" />
+                  <span className="font-medium">{label}</span>
                 </Link>
-              )}
+              ))}
+              
+              <div className="border-t border-accent/10 pt-2 mt-2">
+                {user ? (
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleSignOut}
+                    className="w-full flex items-center space-x-3 px-4 py-3 text-left rounded-lg hover:bg-accent/5 transition-colors"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span>Sign Out</span>
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Link
+                      href="/signin"
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-accent text-white hover:bg-accent/90 transition-colors shadow-md"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <LogIn className="h-5 w-5" />
+                      <span>Sign In</span>
+                    </Link>
+                  </motion.div>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }

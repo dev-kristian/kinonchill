@@ -124,7 +124,7 @@ const MediaPoster: React.FC<MediaPosterProps> = ({
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
           
-          <div className="absolute top-2 left-2 z-10 flex items-center space-x-2">
+          <div className="absolute top-2 left-2 flex items-center space-x-2">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-sm`}>
               <span className={`text-sm font-bold ${getScoreColor}`}>
                 {media.vote_average ? media.vote_average.toFixed(1) : 'N/A'}
