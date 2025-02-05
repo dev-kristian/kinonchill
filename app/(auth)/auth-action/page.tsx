@@ -81,6 +81,7 @@ function AuthActionContent() {
       passwordSchema.parse({ password, confirmPassword });
       setIsFormValid(true);
     } catch (error) {
+      console.error('Password validation error:', error);
       setIsFormValid(false);
     }
   }, [password, confirmPassword]);
