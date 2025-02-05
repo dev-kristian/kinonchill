@@ -14,9 +14,9 @@ export function WithAuth<T extends object>(Component: React.ComponentType<T>) {
 
     useEffect(() => {
       if (!loading) {
-        if (!user && pathname !== '/signin') {
-          router.push('/signin');
-        } else if (user && pathname === '/signin') {
+        if (!user && pathname !== '/sign-in') {
+          router.push('/sign-in');
+        } else if (user && pathname === '/sign-in') {
           router.push('/');
         }
       }
@@ -26,7 +26,7 @@ export function WithAuth<T extends object>(Component: React.ComponentType<T>) {
       return <div>Loading...</div>; 
     }
 
-    if (!user && pathname !== '/signin') {
+    if (!user && pathname !== '/sign-in') {
       return null;
     }
 
