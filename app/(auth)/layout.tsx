@@ -35,7 +35,7 @@ export default function AuthLayout({
             style={{ objectFit: 'cover' }}
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-background/90 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-background/90">
             {/* Optional: Add content overlay */}
           </div>
         </div>
