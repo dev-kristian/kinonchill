@@ -6,20 +6,15 @@ import TopWatchlist from '@/components/home/TopWatchlist';
 import { useUserData } from '@/context/UserDataContext';
 import NotificationSubscription from '@/components/home/NotificationSubscription';
 import MovieNightInvitation from '@/components/home/MovieNightInvitation';
-import Loading from '@/components/Loading';
+import UserWatchlist from '@/components/home/UserWatchList';
 
 export default function Home() {
-  const { userData, isLoading } = useUserData();
+  const { userData } = useUserData();
 
   return (
     <div className="container-6xl mx-auto px-2 md:px-4 py-4">
       <div className="mb-6">
-        {isLoading ? (
-          <Loading 
-            message="Preparing your personalized experience" 
-            spinnerType="default" 
-          />
-        ) : userData ? (
+        {userData ? (
           <AnimatedTitle>
             {(className) => (
               <>
@@ -42,9 +37,10 @@ export default function Home() {
         )}
       </div>
 
-      <div className="flex flex-col lg:flex-row lg:space-x-4 gap-4">
+      <div className="flex flex-col lg:flex-row lg:space-x-2">
         <div className="w-full lg:w-3/4 space-y-4">
           <MovieNightInvitation />
+          <UserWatchlist />
         </div>
         
         <div className="w-full lg:w-1/4">

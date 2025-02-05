@@ -3,8 +3,9 @@
 
 import React, { createContext, useContext } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import type { AuthState } from '@/types/auth';
 
-const AuthContext = createContext<ReturnType<typeof useAuth> | null>(null);
+const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -16,7 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useAuthContext() {
+export function useAuthContext(): AuthState {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuthContext must be used within an AuthProvider');

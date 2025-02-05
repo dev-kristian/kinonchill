@@ -1,3 +1,5 @@
+'use client'
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuthContext } from './AuthContext';
 import { db } from '@/lib/firebase';
@@ -17,6 +19,10 @@ import { useTopWatchlist } from './TopWatchlistContext';
 interface UserDataContextType {
   userData: UserData | null;
   isLoading: boolean;
+  watchlistItems: {
+    movie: Media[];
+    tv: Media[];
+  };
   addToWatchlist: (item: Media, mediaType: 'movie' | 'tv') => Promise<void>;
   removeFromWatchlist: (id: number, mediaType: 'movie' | 'tv') => Promise<void>;
   updateNotificationStatus: (status: 'allowed' | 'denied' | 'unsupported') => Promise<void>;
@@ -36,12 +42,57 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { user } = useAuthContext();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [watchlistItems, setWatchlistItems] = useState<{ movie: Media[], tv: Media[] }>({
+    movie: [],
+    tv: []
+  });
   const { setTopWatchlistItems } = useTopWatchlist();
+
+  const fetchWatchlistItems = async (watchlist: UserData['watchlist']) => {
+    const movieItemsRef = doc(db, 'movies', 'allItems');
+    const tvItemsRef = doc(db, 'tvShows', 'allItems');
+    
+    try {
+      const [movieDoc, tvDoc] = await Promise.all([
+        getDoc(movieItemsRef),
+        getDoc(tvItemsRef)
+      ]);
+
+      const movieItems: Media[] = [];
+      const tvItems: Media[] = [];
+
+      if (movieDoc.exists() && watchlist.movie) {
+        const movieData = movieDoc.data();
+        Object.keys(watchlist.movie).forEach(id => {
+          if (movieData[id]) {
+            movieItems.push(movieData[id]);
+          }
+        });
+      }
+
+      if (tvDoc.exists() && watchlist.tv) {
+        const tvData = tvDoc.data();
+        Object.keys(watchlist.tv).forEach(id => {
+          if (tvData[id]) {
+            tvItems.push(tvData[id]);
+          }
+        });
+      }
+
+      setWatchlistItems({
+        movie: movieItems.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0)),
+        tv: tvItems.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+      });
+    } catch (error) {
+      console.error('Error fetching watchlist items:', error);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
       setUserData(null);
       setIsLoading(false);
+      setWatchlistItems({ movie: [], tv: [] });
       return;
     }
 
@@ -52,13 +103,18 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (docSnapshot.exists()) {
         const userInfo = docSnapshot.data();
         const watchlistSnapshot = await getDoc(watchlistDocRef);
-        const watchlistData = watchlistSnapshot.exists() ? watchlistSnapshot.data() : { watchlist: { movie: {}, tv: {} } };
+        const watchlistData = watchlistSnapshot.exists() 
+          ? watchlistSnapshot.data() 
+          : { watchlist: { movie: {}, tv: {} } };
 
-        setUserData({
+        const newUserData = {
           username: userInfo.username,
           notification: userInfo.notification,
           ...watchlistData
-        } as UserData);
+        } as UserData;
+
+        setUserData(newUserData);
+        await fetchWatchlistItems(newUserData.watchlist);
       } else {
         setUserData({ username: '', watchlist: { movie: {}, tv: {} } });
       }
@@ -67,7 +123,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     return () => unsubscribe();
   }, [user]);
-  
+
   const addToWatchlist = async (item: Media, mediaType: 'movie' | 'tv') => {
     if (!user || !userData) return;
 
@@ -88,6 +144,12 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             [item.id.toString()]: true
           }
         }
+      }));
+
+      // Update watchlist items
+      setWatchlistItems(prevItems => ({
+        ...prevItems,
+        [mediaType]: [...prevItems[mediaType], item].sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
       }));
 
       await setDoc(watchlistDocRef, {
@@ -143,25 +205,10 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           await updateDoc(itemsDocRef, {
             [item.id]: newItem
           });
-
-          // Update TopWatchlist state
-          setTopWatchlistItems(prevItems => {
-            const updatedItems = [...prevItems[mediaType], {
-              ...newItem,
-              weighted_score: ((item.vote_average || 0) * 1.3) + 1
-            } as TopWatchlistItem];
-            updatedItems.sort((a, b) => b.weighted_score - a.weighted_score);
-            return {
-              ...prevItems,
-              [mediaType]: updatedItems.slice(0, 20)
-            };
-          });
         }
       }
-
-      console.log(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} ID ${item.id} added to watchlist and central collection successfully.`);
     } catch (error) {
-      console.error(`Error adding ${mediaType} to watchlist and central collection:`, error);
+      console.error(`Error adding ${mediaType} to watchlist:`, error);
     }
   };
 
@@ -178,6 +225,12 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         delete updatedWatchlist[mediaType][id.toString()];
         return { ...prevData!, watchlist: updatedWatchlist };
       });
+
+      // Update watchlist items
+      setWatchlistItems(prevItems => ({
+        ...prevItems,
+        [mediaType]: prevItems[mediaType].filter(item => item.id !== id)
+      }));
 
       await updateDoc(watchlistDocRef, {
         [`watchlist.${mediaType}.${id.toString()}`]: deleteField()
@@ -207,36 +260,36 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           [mediaType]: updatedItems
         };
       });
-
-      console.log(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} ID ${id} removed from watchlist successfully.`);
     } catch (error) {
       console.error(`Error removing ${mediaType} from watchlist:`, error);
     }
   };
 
   const updateNotificationStatus = async (status: 'allowed' | 'denied' | 'unsupported') => {
-    if (user) {
-      try {
-        const userDocRef = doc(db, 'users', user.uid);
-        await setDoc(userDocRef, {
-          notification: status
-        }, { merge: true });
-        console.log(`Notification status updated to: ${status}`);
-        
-        // Update local state
-        setUserData(prevData => prevData ? {...prevData, notification: status} : null);
-      } catch (error) {
-        console.error("Error updating notification status:", error);
-        throw error;
-      }
-    } else {
-      console.log("User not logged in. Cannot update notification status.");
-      throw new Error("User not logged in");
+    if (!user) throw new Error("User not logged in");
+
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      await setDoc(userDocRef, {
+        notification: status
+      }, { merge: true });
+      
+      setUserData(prevData => prevData ? {...prevData, notification: status} : null);
+    } catch (error) {
+      console.error("Error updating notification status:", error);
+      throw error;
     }
   };
 
   return (
-    <UserDataContext.Provider value={{ userData, isLoading, addToWatchlist, removeFromWatchlist, updateNotificationStatus }}>
+    <UserDataContext.Provider value={{ 
+      userData, 
+      isLoading, 
+      watchlistItems,
+      addToWatchlist, 
+      removeFromWatchlist, 
+      updateNotificationStatus 
+    }}>
       {children}
     </UserDataContext.Provider>
   );

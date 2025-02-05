@@ -14,19 +14,28 @@ const TopWatchlist: React.FC = () => {
   const { topWatchlistItems, isLoading, error } = useTopWatchlist();
   const [mediaType, setMediaType] = useState<'movie' | 'tv'>('movie');
 
-  const items: TopWatchlistItem[] = topWatchlistItems[mediaType].slice(0, 6);
+  const items: TopWatchlistItem[] = topWatchlistItems[mediaType].slice(0, 5);
 
   if (isLoading) {
     return (
-      <Card className="bg-gray-900/50 text-white p-4 rounded-lg shadow-lg flex justify-center items-center h-64">
+      <Card className="bg-gray-900/50 text-white p-2 rounded-lg shadow-lg flex justify-center items-center h-64">
         <Loader2 className="w-8 h-8 animate-spin" />
+      </Card>
+    );
+  }
+
+  // Show empty state instead of continuous loading
+  if (items.length === 0) {
+    return (
+      <Card className="bg-gray-900/50 text-white p-2 rounded-lg shadow-lg">
+        <p className="text-center">No items in watchlist</p>
       </Card>
     );
   }
 
   if (error) {
     return (
-      <Card className="bg-gray-900/50 text-white p-4 rounded-lg shadow-lg">
+      <Card className="bg-gray-900/50 text-white p-2 rounded-lg shadow-lg">
         <h2 className="text-xl font-bold mb-2">Error</h2>
         <p className="text-red-400">{error}</p>
       </Card>
@@ -34,7 +43,7 @@ const TopWatchlist: React.FC = () => {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-gray-950 to-gray-900 text-white p-2 rounded-2xl shadow-lg border-none mb-6 md:mb-0">
+    <Card className="bg-gradient-to-br from-gray-950 to-gray-900 text-white p-2 rounded-2xl shadow-lg border-none ">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-white">Top Watchlist</h2>
         <TooltipProvider>
@@ -60,7 +69,7 @@ const TopWatchlist: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.2 }}
           className="space-y-2 "
         >
           {items.map((item: TopWatchlistItem, index: number) => (
@@ -101,7 +110,7 @@ const TopWatchlist: React.FC = () => {
       </AnimatePresence>
       <Link href="/top-watchlist">
         <Button
-          className="mt-4 w-full bg-transparent hover:bg-transparent text-primary/70 hover:text-primary/70 shadow-none transition-colors duration-200"
+          className="mt-4 w-full bg-transparent  text-primary/70 hover:text-primary hover:bg-gray-950 shadow-none transition-colors duration-200 rounded-lg"
         >
           See All
         </Button>

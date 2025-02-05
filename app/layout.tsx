@@ -1,4 +1,3 @@
-//app\layout.tsx
 import '@/styles/globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
@@ -20,10 +19,11 @@ export const metadata: Metadata = {
       { url: '/apple-touch-icon-180x180.png', sizes: '180x180', type: 'image/png' },
     ],
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black',
-    title: 'Kino & Chill',
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black',
+    'apple-mobile-web-app-title': 'Kino & Chill',
   },
 }
 

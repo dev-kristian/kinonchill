@@ -292,27 +292,42 @@ export default function MovieNightInvitation() {
     handleMovieInputChange, handleAddMovie, completeSession, 
     selectedDates, handleDatesSelected]);
 
-  return (
-    <div className="bg-gradient-to-br from-gray-950 to-gray-900 p-2 rounded-2xl shadow-xl mx-auto">
-      {!showCalendar ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-center space-y-4"
-        >
-          <p className="text-xl mb-4 text-gray-300">Ready to plan a movie night?</p>
-          <p className="mb-6 text-gray-400">Create a session and invite your friends to join!</p>
-          <Button 
-            onClick={handleCreateSession} 
-            className="py-6 px-8 text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 shadow-none transition-all duration-300"
+    return (
+      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 rounded-3xl shadow-2xl mx-auto border border-white/10 backdrop-blur-lg">
+        {!showCalendar ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="text-center space-y-6 py-8 px-4"
           >
-            <FiCalendar className="mr-2 text-primary/50" /> Start a New Movie Night
-          </Button>
-        </motion.div>
-      ) : (
-        sessionCreationContent
-      )}
-    </div>
-  );
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+                Plan Your Perfect Movie Night
+              </h2>
+              <p className="text-gray-300/90 text-lg mt-2">
+                Collaborate with friends, choose the best time, and pick movies together
+              </p>
+            </div>
+            
+            <Button 
+              onClick={handleCreateSession} 
+              className="group relative py-7 px-10 text-lg font-semibold rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30"
+            >
+              <FiCalendar className="mr-3 h-5 w-5 transition-transform group-hover:scale-110" />
+              Start New Session
+              <div className="absolute inset-0 rounded-xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </Button>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {sessionCreationContent}
+          </motion.div>
+        )}
+      </div>
+    );
 }

@@ -40,7 +40,7 @@ export default function Navigation() {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      router.push('/signin');
+      router.push('/sign-in');
       setIsOpen(false);
     } catch (error) {
       console.error('Error signing out:', error);
