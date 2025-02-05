@@ -1,7 +1,7 @@
 // app/(auth)/auth-action/page.tsx
 'use client'
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { applyActionCode, confirmPasswordReset } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -26,7 +26,7 @@ const passwordSchema = z.object({
   path: ["confirmPassword"],
 });
 
-function AuthAction() {
+function AuthActionContent() {
   const [loading, setLoading] = useState(true);
   const [verificationStatus, setVerificationStatus] = useState('');
   const [password, setPassword] = useState('');
@@ -81,7 +81,6 @@ function AuthAction() {
       passwordSchema.parse({ password, confirmPassword });
       setIsFormValid(true);
     } catch (error) {
-      console.error('Error resetting password:', error);
       setIsFormValid(false);
     }
   }, [password, confirmPassword]);
@@ -110,114 +109,136 @@ function AuthAction() {
     }
   };
 
-  return (
-    <div>
-      {loading ? (
-        <div className="flex justify-center items-center min-h-[300px]">
-          <Loader />
-        </div>
-      ) : mode === 'verifyEmail' ? (
-        <div>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center signin-text">
-              Email Verification
-            </CardTitle>
-            <CardDescription className='text-center text-muted-foreground'>
-              {verificationStatus === 'success'
-                ? "Your email has been successfully verified. Redirecting to sign-in page..."
-                : verificationStatus === 'error'
-                  ? "Unable to verify your email. Please try again or contact support."
-                  : verificationStatus === 'invalid'
-                    ? "The link is invalid or has expired."
-                    : "Verifying your email..."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {verificationStatus === 'error' || verificationStatus === 'invalid' ? (
-              <div className="mt-4 text-center">
-                <Link
-                  href="/sign-in"
-                  className="text-primary hover:text-primary/80 transition-colors"
-                >
-                  ← Back to login
-                </Link>
-              </div>
-            ) : null}
-          </CardContent>
-        </div>
-      ) : mode === 'resetPassword' ? (
-        <div>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center signin-text">
-              Reset Password
-            </CardTitle>
-            <CardDescription className="text-center text-muted-foreground">
-              Enter your new password
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handlePasswordReset} className="space-y-4">
-              <div className="space-y-2">
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="New Password"
-                    className="bg-secondary border-input pr-10"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-                <PasswordStrengthIndicator password={password} />
-              </div>
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[300px]">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (mode === 'verifyEmail') {
+    return (
+      <div>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center signin-text">
+            Email Verification
+          </CardTitle>
+          <CardDescription className='text-center text-muted-foreground'>
+            {verificationStatus === 'success' 
+              ? "Your email has been successfully verified. Redirecting to sign-in page..." 
+              : verificationStatus === 'error'
+              ? "Unable to verify your email. Please try again or contact support."
+              : verificationStatus === 'invalid'
+              ? "The link is invalid or has expired."
+              : "Verifying your email..."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {verificationStatus === 'error' || verificationStatus === 'invalid' ? (
+            <div className="mt-4 text-center">
+              <Link 
+                href="/sign-in" 
+                className="text-primary hover:text-primary/80 transition-colors"
+              >
+                ← Back to login
+              </Link>
+            </div>
+          ) : null}
+        </CardContent>
+      </div>
+    );
+  }
+
+  if (mode === 'resetPassword') {
+    return (
+      <div>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center signin-text">
+            Reset Password
+          </CardTitle>
+          <CardDescription className="text-center text-muted-foreground">
+            Enter your new password
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handlePasswordReset} className="space-y-4">
+            <div className="space-y-2">
               <div className="relative">
                 <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm Password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="New Password"
                   className="bg-secondary border-input pr-10"
                 />
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showConfirmPassword ? (
+                  {showPassword ? (
                     <EyeOff className="h-5 w-5" />
                   ) : (
                     <Eye className="h-5 w-5" />
                   )}
                 </button>
               </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={!isFormValid || loading}
+              <PasswordStrengthIndicator password={password} />
+            </div>
+            <div className="relative">
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm Password"
+                className="bg-secondary border-input pr-10"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
-                {loading ? (
-                  <>
-                    Resetting Password &nbsp; <Loader />
-                  </>
+                {showConfirmPassword ? (
+                  <EyeOff className="h-5 w-5" />
                 ) : (
-                  'Reset Password'
+                  <Eye className="h-5 w-5" />
                 )}
-              </Button>
-            </form>
-          </CardContent>
+              </button>
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={!isFormValid || loading}
+            >
+              {loading ? (
+                <>
+                  Resetting Password &nbsp; <Loader />
+                </>
+              ) : (
+                'Reset Password'
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function AuthAction() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="flex justify-center items-center min-h-[300px]">
+          <Loader />
         </div>
-      ) : null}
-    </div>
+      }
+    >
+      <AuthActionContent />
+    </Suspense>
   );
 }
 
