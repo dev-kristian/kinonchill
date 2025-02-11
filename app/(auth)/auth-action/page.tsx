@@ -4,7 +4,8 @@
 import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { applyActionCode, confirmPasswordReset } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -14,11 +15,12 @@ import { z } from 'zod';
 import { useCustomToast } from '@/hooks/useToast';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import Link from 'next/link';
+import { useAuthContext } from '@/context/AuthContext';
 
 const passwordSchema = z.object({
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/, 
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/,
       'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -36,11 +38,12 @@ function AuthActionContent() {
   const [mode, setMode] = useState('');
   const [oobCode, setOobCode] = useState('');
   const [isFormValid, setIsFormValid] = useState(false);
-  
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const verificationInitiated = useRef(false);
   const { showToast } = useCustomToast();
+  const { user } = useAuthContext();
 
   useEffect(() => {
     const handleEmailVerification = async (oobCode: string) => {
@@ -48,6 +51,25 @@ function AuthActionContent() {
         await applyActionCode(auth, oobCode);
         setVerificationStatus('success');
         showToast("Email Verified", "Your email has been successfully verified.", "success");
+
+        // Add to Firestore AFTER successful verification
+        if (user) {
+          try {
+            const userDocRef = doc(db, 'users', user.uid);
+             // Simplified userData - no displayName or photoURL
+            const userData = {
+              uid: user.uid,
+              email: user.email,
+              createdAt: serverTimestamp(),
+              username: "",
+            };
+            await setDoc(userDocRef, userData, { merge: true });
+          } catch (firestoreError) {
+            console.error("Error writing to Firestore:", firestoreError);
+            showToast("Firestore Error", "Failed to update user data.", "error");
+          }
+        }
+
         setTimeout(() => router.push('/sign-in'), 3000);
       } catch (error) {
         console.error('Error verifying email:', error);
@@ -57,10 +79,10 @@ function AuthActionContent() {
         setLoading(false);
       }
     };
-  
+
     const mode = searchParams.get('mode');
     const oobCode = searchParams.get('oobCode');
-  
+
     if (mode && oobCode && !verificationInitiated.current) {
       setMode(mode);
       setOobCode(oobCode);
@@ -74,7 +96,7 @@ function AuthActionContent() {
       setVerificationStatus('invalid');
       setLoading(false);
     }
-  }, [searchParams, showToast, router]);
+  }, [searchParams, showToast, router, user]);
 
   useEffect(() => {
     try {
@@ -126,20 +148,20 @@ function AuthActionContent() {
             Email Verification
           </CardTitle>
           <CardDescription className='text-center text-muted-foreground'>
-            {verificationStatus === 'success' 
-              ? "Your email has been successfully verified. Redirecting to sign-in page..." 
+            {verificationStatus === 'success'
+              ? "Your email has been successfully verified. Redirecting to sign-in page..."
               : verificationStatus === 'error'
-              ? "Unable to verify your email. Please try again or contact support."
-              : verificationStatus === 'invalid'
-              ? "The link is invalid or has expired."
-              : "Verifying your email..."}
+                ? "Unable to verify your email. Please try again or contact support."
+                : verificationStatus === 'invalid'
+                  ? "The link is invalid or has expired."
+                  : "Verifying your email..."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {verificationStatus === 'error' || verificationStatus === 'invalid' ? (
             <div className="mt-4 text-center">
-              <Link 
-                href="/sign-in" 
+              <Link
+                href="/sign-in"
                 className="text-primary hover:text-primary/80 transition-colors"
               >
                 ← Back to login
@@ -207,14 +229,14 @@ function AuthActionContent() {
                 )}
               </button>
             </div>
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={!isFormValid || loading}
             >
               {loading ? (
                 <>
-                  Resetting Password &nbsp; <Loader />
+                  Resetting Password   <Loader />
                 </>
               ) : (
                 'Reset Password'
@@ -231,7 +253,7 @@ function AuthActionContent() {
 
 function AuthAction() {
   return (
-    <Suspense 
+    <Suspense
       fallback={
         <div className="flex justify-center items-center min-h-[300px]">
           <Loader />

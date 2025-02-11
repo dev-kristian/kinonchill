@@ -7,7 +7,7 @@ import { signOut } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { auth } from '@/lib/firebase';
-import { 
+import {
   Home,
   Clock,
   Search,
@@ -16,7 +16,8 @@ import {
   ChevronDown,
   Menu,
   X,
-  User as UserIcon
+  User as UserIcon,
+  Users // Import Users icon for Friends
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -61,14 +62,14 @@ export default function Navigation() {
   const isActivePath = (path: string) => pathname === path;
 
   return (
-  <nav className={`fixed w-full z-10 py-1 h-[var(--navbar-height)] transition-all duration-300 ${
-    scrolled ? 'bg-background/80 backdrop-blur-md shadow-lg' : 'bg-background/50 backdrop-blur-sm'
-  }`}>
+    <nav className={`fixed w-full z-10 py-1 h-[var(--navbar-height)] transition-all duration-300 ${
+      scrolled ? 'bg-background/80 backdrop-blur-md shadow-lg' : 'bg-background/50 backdrop-blur-sm'
+    }`}>
       <div className="mx-auto px-4">
         <div className="flex justify-between items-center relative nav-container">
           {/* Logo */}
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="flex items-center space-x-2 group"
             onClick={() => setIsOpen(false)}
           >
@@ -76,9 +77,9 @@ export default function Navigation() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Image 
-                src="/icons/popcorn.png" 
-                alt="Popcorn icon" 
+              <Image
+                src="/icons/popcorn.png"
+                alt="Popcorn icon"
                 width={24}
                 height={24}
                 className="transition-transform"
@@ -95,42 +96,43 @@ export default function Navigation() {
               { href: '/', icon: Home, label: 'Home' },
               { href: '/sessions', icon: Clock, label: 'Sessions' },
               { href: '/explore', icon: Search, label: 'Explore' },
+              { href: '/friends', icon: Users, label: 'Friends' }, // Added Friends tab
             ].map(({ href, icon: Icon, label }) => (
-              <Link 
+              <Link
                 key={href}
-                href={href} 
-                className={`flex items-center space-x-2 px-3 py-2 rounded-3xl transition-all duration-200 
-                  ${isActivePath(href) 
-                    ? 'text-accent' 
+                href={href}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-3xl transition-all duration-200
+                  ${isActivePath(href)
+                    ? 'text-accent'
                     : 'text-foreground/90 hover:text-accent '}`}
               >
                 <Icon className="h-5 w-5" />
                 <span className="font-medium">{label}</span>
               </Link>
             ))}
-            
+
             {user ? (
               <div className="relative ml-4">
-                <motion.button 
+                <motion.button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-2 focus:outline-none"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                    {user.photoURL ? (
-                      <Image
-                        src={user.photoURL}
-                        alt="User avatar"
-                        width={24}
-                        height={24}
-                        className="rounded-full hover:opacity-80 transition-opacity"
-                      />
-                    ) : (
-                      <UserIcon className="h-5 w-5 text-accent" />
-                    )}
+                  {user.photoURL ? (
+                    <Image
+                      src={user.photoURL}
+                      alt="User avatar"
+                      width={24}
+                      height={24}
+                      className="rounded-full hover:opacity-80 transition-opacity"
+                    />
+                  ) : (
+                    <UserIcon className="h-5 w-5 text-accent" />
+                  )}
                   <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </motion.button>
-                
+
                 <AnimatePresence>
                   {isDropdownOpen && (
                     <motion.div
@@ -196,13 +198,14 @@ export default function Navigation() {
                 { href: '/', icon: Home, label: 'Home' },
                 { href: '/sessions', icon: Clock, label: 'Sessions' },
                 { href: '/explore', icon: Search, label: 'Explore' },
+                { href: '/friends', icon: Users, label: 'Friends' }, // Added Friends tab
               ].map(({ href, icon: Icon, label }) => (
-                <Link 
+                <Link
                   key={href}
-                  href={href} 
+                  href={href}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
-                    ${isActivePath(href) 
-                      ? 'bg-accent/10 text-accent shadow-sm' 
+                    ${isActivePath(href)
+                      ? 'bg-accent/10 text-accent shadow-sm'
                       : 'hover:bg-accent/5'}`}
                   onClick={() => setIsOpen(false)}
                 >
@@ -210,7 +213,7 @@ export default function Navigation() {
                   <span className="font-medium">{label}</span>
                 </Link>
               ))}
-              
+
               <div className="border-t border-accent/10 pt-2 mt-2">
                 {user ? (
                   <motion.button

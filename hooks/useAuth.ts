@@ -1,29 +1,56 @@
 // hooks/useAuth.ts
 import { useEffect, useState } from 'react';
-import { 
-  onAuthStateChanged, 
-  User, 
-  GoogleAuthProvider, 
+import {
+  onAuthStateChanged,
+  User,
+  GoogleAuthProvider,
   signInWithPopup,
   signOut as firebaseSignOut,
   setPersistence,
   browserLocalPersistence
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set persistence to local storage
     setPersistence(auth, browserLocalPersistence)
       .catch((error) => {
         console.error("Auth persistence error:", error);
       });
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+
+        // Check if email is verified before syncing to Firestore
+        if (currentUser.emailVerified) {
+          try {
+            const userDocRef = doc(db, 'users', currentUser.uid);
+            const userDoc = await getDoc(userDocRef);
+
+            if (!userDoc.exists()) {
+              // Only create new document if it doesn't exist
+              const userData = {
+                uid: currentUser.uid,
+                email: currentUser.email,
+                createdAt: serverTimestamp(),
+                username: "",
+                setupCompleted: false,
+              };
+
+              await setDoc(userDocRef, userData);
+            }
+          } catch (error) {
+            console.error("Error writing to Firestore:", error);
+          }
+        }
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
@@ -50,11 +77,11 @@ export function useAuth() {
     }
   };
 
-  return { 
-    user, 
+  return {
+    user,
     loading,
     signIn,
     signOut,
-    isAuthenticated: !!user 
+    isAuthenticated: !!user
   };
 }

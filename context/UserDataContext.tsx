@@ -109,6 +109,11 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         const newUserData = {
           username: userInfo.username,
+          email: userInfo.email,
+          createdAt: userInfo.createdAt?.toDate(),
+          updatedAt: userInfo.updatedAt?.toDate(),
+          setupCompleted: userInfo.setupCompleted,
+          uid: userInfo.uid,
           notification: userInfo.notification,
           ...watchlistData
         } as UserData;
@@ -116,7 +121,19 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setUserData(newUserData);
         await fetchWatchlistItems(newUserData.watchlist);
       } else {
-        setUserData({ username: '', watchlist: { movie: {}, tv: {} } });
+        // If user document doesn't exist, create it with default values
+        const defaultUserData: UserData = {
+          username: '',
+          email: user.email || undefined, // Convert null to undefined
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          setupCompleted: false,
+          uid: user.uid,
+          watchlist: { movie: {}, tv: {} }
+        };
+        
+        await setDoc(userDocRef, defaultUserData);
+        setUserData(defaultUserData);
       }
       setIsLoading(false);
     });

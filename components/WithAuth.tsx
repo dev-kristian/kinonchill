@@ -1,10 +1,12 @@
 // components/WithAuth.tsx
-
 'use client';
 
 import { useEffect } from 'react';
 import { useAuthContext } from '@/context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import Loading from '@/components/Loading';
 
 export function WithAuth<T extends object>(Component: React.ComponentType<T>) {
   return function AuthenticatedComponent(props: T) {
@@ -13,17 +15,28 @@ export function WithAuth<T extends object>(Component: React.ComponentType<T>) {
     const pathname = usePathname();
 
     useEffect(() => {
-      if (!loading) {
-        if (!user && pathname !== '/sign-in') {
+      const checkUserSetup = async () => {
+        if (user) {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const userData = userDoc.data();
+          
+          if (!userData?.setupCompleted && pathname !== '/welcome') {
+            router.push('/welcome');
+          } else if (userData?.setupCompleted && pathname === '/welcome') {
+            router.push('/');
+          }
+        } else if (!loading && pathname !== '/sign-in') {
           router.push('/sign-in');
-        } else if (user && pathname === '/sign-in') {
-          router.push('/');
         }
+      };
+
+      if (!loading) {
+        checkUserSetup();
       }
     }, [user, loading, router, pathname]);
 
     if (loading) {
-      return <div>Loading...</div>; 
+      return <Loading message="Loading..." spinnerType="full" />;
     }
 
     if (!user && pathname !== '/sign-in') {

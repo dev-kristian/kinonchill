@@ -108,6 +108,11 @@ export type NotificationStatus = 'allowed' | 'denied' | 'unsupported';
 
 export interface UserData {
   username: string;
+  email?: string; // Make email optional
+  createdAt?: Date;
+  updatedAt?: Date;
+  setupCompleted?: boolean;
+  uid?: string;
   watchlist: {
     movie: { [movieId: string]: boolean };
     tv: { [tvId: string]: boolean };
@@ -171,4 +176,33 @@ export interface Episode {
   vote_average: number;
   vote_count: number;
   crew: CrewMember[];
+}
+
+// types/types.ts
+// Add these to your existing types
+export interface FriendRequest {
+  uid: string;
+  username: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  timestamp: Date;
+}
+
+export interface UserFriends {
+  totalFriends: number;
+  friendsList: { [uid: string]: boolean };
+  sentRequests: { [uid: string]: boolean };
+  receivedRequests: { [uid: string]: boolean };
+}
+export interface SearchResult {
+  uid: string;
+  username: string;
+  email?: string;
+}
+
+export interface SearchResultWithStatus extends SearchResult {
+  requestStatus?: {
+    exists: boolean;
+    type?: 'sent' | 'received';
+    status?: 'pending' | 'accepted' | 'rejected';
+  };
 }

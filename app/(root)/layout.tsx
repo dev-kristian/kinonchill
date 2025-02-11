@@ -1,3 +1,4 @@
+//app\(root)\layout.tsx
 'use client'
 
 import React, { Suspense } from 'react'
@@ -10,6 +11,7 @@ import { TopWatchlistProvider } from '@/context/TopWatchlistContext'
 import { SessionProvider } from '@/context/SessionContext'
 import { Toaster } from '@/components/ui/toaster'
 import Loading from '@/components/Loading' 
+import { WithProfileCompleted } from '@/components/WithProfileComplete'
 
 function RootLayout({
   children,
@@ -46,4 +48,4 @@ function RootLayout({
   )
 }
 
-export default WithAuth(RootLayout)
+export default WithAuth(WithProfileCompleted(RootLayout));

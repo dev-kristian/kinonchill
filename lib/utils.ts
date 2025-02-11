@@ -24,10 +24,10 @@ export const checkOrCreateUserProfile = async (user: User) => {
     });
 
     const data = await response.json();
-    return data.profileCompleted ? '/' : '/create-profile';
+    return data.profileCompleted ? '/' : '/';
   } catch (error) {
     console.error('Error checking/creating user profile:', error);
-    return '/create-profile';
+    return '/';
   }
 };
 
