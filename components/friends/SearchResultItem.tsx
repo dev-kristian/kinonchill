@@ -1,28 +1,15 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { UserRound, Clock, UserCheck, Loader2, UserPlus } from 'lucide-react';
+import { FriendSearchResult, FriendSearchResultWithStatus } from '@/types';
 
-export interface SearchResult {
-  uid: string;
-  username: string;
-  email?: string;
-}
-
-export interface SearchResultWithStatus extends SearchResult {
-  requestStatus?: {
-    exists: boolean;
-    type?: 'sent' | 'received';
-    status?: 'pending' | 'accepted' | 'rejected';
-  };
-}
-
-interface SearchResultItemProps {
-  user: SearchResultWithStatus;
+interface FriendSearchResultItemProps {
+  user: FriendSearchResultWithStatus;
   isPending: boolean;
-  onSendFriendRequest: (targetUser: SearchResult) => void;
+  onSendFriendRequest: (targetUser: FriendSearchResult) => void;
 }
 
-const SearchResultItem: React.FC<SearchResultItemProps> = ({ user, isPending, onSendFriendRequest }) => {
+const SearchResultItem: React.FC<FriendSearchResultItemProps> = ({ user, isPending, onSendFriendRequest }) => {
   return (
     <div className="bg-card p-4 rounded-lg flex items-center justify-between hover:bg-card/80 transition-colors">
       <div className="flex items-center gap-3">

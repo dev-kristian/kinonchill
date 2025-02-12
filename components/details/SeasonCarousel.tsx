@@ -4,19 +4,14 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import FlickyEmbed from '@/components/details/HostEmbed';
-import { Season, SeasonDetails } from '@/types';
+import { Season, SeasonDetails, SelectedEpisode } from '@/types';
 
 interface SeasonCarouselProps {
   seasons: Season[];
   tmdbId: number;
   fetchSeasonDetails: (formData: FormData) => Promise<SeasonDetails | null>;
 }
-interface SelectedEpisode {
-  seasonNumber: number;
-  episodeNumber: number;
-  seasonId: number;
-  episodeId: number;
-}
+
 const SeasonCarousel: React.FC<SeasonCarouselProps> = ({ 
   seasons, 
   tmdbId,

@@ -1,3 +1,4 @@
+// app/friends/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -9,12 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useUserData } from '@/context/UserDataContext';
 
 // Import the separated components
-import SearchResultItem, {
-  SearchResult,
-  SearchResultWithStatus,
-} from '@/components/friends/SearchResultItem';
-import FriendRequestItem, { FriendRequest } from '@/components/friends/FriendRequestItem';
-import FriendItem, { Friend } from '@/components/friends/FriendItem';
+import SearchResultItem from '@/components/friends/SearchResultItem';
+import FriendRequestItem from '@/components/friends/FriendRequestItem';
+import FriendItem from '@/components/friends/FriendItem';
+import { Friend, FriendRequest } from '@/types';
+
+import { FriendSearchResult, FriendSearchResultWithStatus } from '@/types';
 
 export default function FriendsPage() {
   const {
@@ -32,7 +33,7 @@ export default function FriendsPage() {
 
   // Search state & handlers
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResultWithStatus[]>([]);
+  const [searchResults, setSearchResults] = useState<FriendSearchResultWithStatus[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState('');
   const [pendingRequests, setPendingRequests] = useState<Set<string>>(new Set());
@@ -46,14 +47,15 @@ export default function FriendsPage() {
     setError('');
     setSearchResults([]);
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/friends/search?username=${encodeURIComponent(
-          searchQuery.trim()
-        )}¤tUserId=${userData.uid}`
-      );
+      const params = new URLSearchParams();
+      params.append('username', searchQuery.trim());
+      params.append('currentUserId', userData.uid);
+
+      const response = await fetch(`http://localhost:3000/api/friends/search?${params.toString()}`);
+
       if (!response.ok) throw new Error('Failed to search users');
       const data = await response.json();
-      const filteredResults = data.users.filter((user: SearchResult) =>
+      const filteredResults = data.users.filter((user: FriendSearchResult) =>
         user.uid !== userData.uid && !friends.some(friend => friend.uid === user.uid)
       );
       setSearchResults(filteredResults);
@@ -70,7 +72,7 @@ export default function FriendsPage() {
     }
   };
 
-  const handleSendFriendRequest = async (targetUser: SearchResult) => {
+  const handleSendFriendRequest = async (targetUser: FriendSearchResult) => {
     if (!userData) {
       showToast('Authentication Error', 'You must be logged in to send friend requests', 'info');
       return;

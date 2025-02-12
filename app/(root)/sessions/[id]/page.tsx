@@ -15,10 +15,9 @@ import { useParams } from 'next/navigation';
 
 const SessionPage = () => {
   const { id } = useParams();
-  const { sessions, updateUserDates } = useSession();    // Get `sessions` from SessionContext
+  const { sessions, updateUserDates } = useSession();  
   const { userData } = useUserData();
   
-  // Find the particular session based on the ID from the URL
   const session = useMemo(() => sessions.find((s) => s.id === id), [sessions, id]);
   
   const [selectedDates, setSelectedDates] = useState<DateTimeSelection[]>([]);
@@ -27,13 +26,11 @@ const SessionPage = () => {
 
   useEffect(() => {
     if (session) {
-      // Calculate date popularity only if the session is available
       setDatePopularity(calculateDatePopularity(session.userDates));
     }
   }, [session]);
 
   useEffect(() => {
-    // Set the dates of the current user (pulled from the session data)
     if (session && userData) {
       const userDates = session.userDates[userData.username] || [];
       setSelectedDates(userDates.map(date => ({
@@ -44,7 +41,6 @@ const SessionPage = () => {
   }, [session, userData]);
 
   if (!session || !userData) {
-    // Show a loading message if the session or userData isn't available yet
     return <div className="text-center p-8 text-gray-400">Loading...</div>;
   }
 

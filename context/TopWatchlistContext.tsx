@@ -2,24 +2,10 @@
 'use client'
 
 import React, { createContext, useState, useContext, useCallback, useEffect, useRef } from 'react';
-import { doc, getDoc, DocumentData } from 'firebase/firestore';
+import { doc, getDoc} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { TopWatchlistItem } from '@/types';
+import { TopWatchlistItem, TopWatchlistContextType, FirestoreWatchlistItem } from '@/types';
 import { useUserData } from './UserDataContext';
-
-interface TopWatchlistContextType {
-  topWatchlistItems: {
-    movie: TopWatchlistItem[];
-    tv: TopWatchlistItem[];
-  };
-  setTopWatchlistItems: React.Dispatch<React.SetStateAction<{
-    movie: TopWatchlistItem[];
-    tv: TopWatchlistItem[];
-  }>>;
-  isLoading: boolean;
-  error: string | null;
-  fetchTopWatchlistItems: (mediaType: 'movie' | 'tv') => Promise<void>;
-}
 
 const TopWatchlistContext = createContext<TopWatchlistContextType | undefined>(undefined);
 
@@ -30,17 +16,6 @@ export const useTopWatchlist = () => {
   }
   return context;
 };
-
-interface FirestoreWatchlistItem {
-  id: number;
-  media_type: 'movie' | 'tv';
-  poster_path?: string;
-  release_date?: string;
-  title?: string;
-  vote_average?: number;
-  [key: string]: any; // To allow other potential fields from Firestore
-}
-
 
 export const TopWatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [topWatchlistItems, setTopWatchlistItems] = useState<{ movie: TopWatchlistItem[]; tv: TopWatchlistItem[] }>({
@@ -56,8 +31,6 @@ export const TopWatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     topWatchlistItemsRef.current = topWatchlistItems;
   }, [topWatchlistItems]);
-
-  // No need for getWatchlistCount anymore
 
   const fetchTopWatchlistItemsForUser = useCallback(async (userId: string, mediaType: 'movie' | 'tv'): Promise<FirestoreWatchlistItem[]> => { // Changed return type
     try {

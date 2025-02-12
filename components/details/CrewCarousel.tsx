@@ -13,15 +13,11 @@ interface CrewCarouselProps {
   error: string | null;
 }
 
-interface MergedCrewMember extends CrewMember {
-  roles: string[];
-}
-
 const CrewCarousel: React.FC<CrewCarouselProps> = ({ cast, crew, isLoading, error }) => {
   const controls = useAnimation();
 
   const mergedCrewMembers = useMemo(() => {
-    const memberMap = new Map<number, MergedCrewMember>();
+    const memberMap = new Map<number, CrewMember>();
 
     const addMember = (member: CrewMember, role: string) => {
       if (memberMap.has(member.id)) {

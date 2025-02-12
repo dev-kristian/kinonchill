@@ -1,23 +1,6 @@
+//context\TrendingContext.tsx
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
-import { useTopWatchlist } from '@/context/TopWatchlistContext';
-import { Media } from '@/types';
-
-interface MediaState {
-  data: Media[];
-  page: number;
-  isLoading: boolean;
-  error: string | null;
-  hasMore: boolean;
-}
-
-interface TrendingContextType {
-  trendingState: MediaState;
-  mediaType: 'movie' | 'tv';
-  timeWindow: 'day' | 'week';
-  setMediaType: (type: 'movie' | 'tv') => void;
-  setTimeWindow: (window: 'day' | 'week') => void;
-  fetchTrending: () => Promise<void>;
-}
+import { Media, TrendingContextType, MediaState } from '@/types'; 
 
 const TrendingContext = createContext<TrendingContextType | undefined>(undefined);
 
@@ -80,10 +63,8 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
 
       setState(prev => {
-        // Create a Set of existing item IDs to prevent duplicates
         const existingIds = new Set(prev.data.map(item => `${item.id}-${item.media_type}`));
         
-        // Filter out duplicates before adding new items
         const filteredResults = resultsWithWatchlistCounts.filter(item => 
           !existingIds.has(`${item.id}-${item.media_type}`)
         );
@@ -178,14 +159,3 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     </TrendingContext.Provider>
   );
 };
-
-// Update the context interface
-interface TrendingContextType {
-  trendingState: MediaState;
-  mediaType: 'movie' | 'tv';
-  timeWindow: 'day' | 'week';
-  isInitialLoading: boolean;
-  setMediaType: (type: 'movie' | 'tv') => void;
-  setTimeWindow: (window: 'day' | 'week') => void;
-  fetchTrending: () => Promise<void>;
-}

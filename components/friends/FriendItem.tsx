@@ -1,12 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { UserRound, Loader2, UserMinus } from 'lucide-react';
-
-export interface Friend {
-  uid: string;
-  username: string;
-  email?: string;
-}
+import { Friend } from '@/types';
 
 interface FriendItemProps {
   friend: Friend;

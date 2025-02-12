@@ -52,11 +52,9 @@ function AuthActionContent() {
         setVerificationStatus('success');
         showToast("Email Verified", "Your email has been successfully verified.", "success");
 
-        // Add to Firestore AFTER successful verification
         if (user) {
           try {
             const userDocRef = doc(db, 'users', user.uid);
-             // Simplified userData - no displayName or photoURL
             const userData = {
               uid: user.uid,
               email: user.email,

@@ -13,16 +13,8 @@ import { useCustomToast } from '@/hooks/useToast';
 import { getFirebaseErrorMessage } from '@/lib/firebaseErrors';
 import { useRouter } from 'next/navigation';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
+import { AuthFormData } from '@/types';
 
-// components/AuthForm.tsx
-interface AuthFormData {
-    email: string;
-    password: string;
-    confirmPassword?: string;
-    rememberMe?: boolean;
-    agreeToTerms?: boolean;
-  }
-  
   interface AuthFormProps {
     isSignUp: boolean;
     onSubmit: (data: AuthFormData) => void;

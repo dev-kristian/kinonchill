@@ -1,23 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Media } from '@/types';
-
-export interface SearchResult extends Media {
-  overview: string;
-}
-
-interface SearchState {
-  results: SearchResult[];
-  isLoading: boolean;
-  error: string | null;
-}
-
-interface SearchContextType {
-  searchState: SearchState;
-  setSearchResults: (results: SearchResult[]) => void;
-  setIsLoading: (isLoading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearSearch: () => void;
-}
+import { SearchResult, SearchState, SearchContextType } from '@/types';
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
 

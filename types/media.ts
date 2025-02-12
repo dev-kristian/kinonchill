@@ -12,13 +12,18 @@ export interface Media {
     first_air_date?: string;
     watchlist_count?: number;
   }
-  
+
+  export interface SearchResult extends Media {
+    overview: string;
+  }
+
   export interface CrewMember {
     id: number;
     name: string;
     profile_path: string | null;
     character?: string;
     job?: string;
+    roles: string[]
   }
   
   export interface Genre {
@@ -90,7 +95,14 @@ export interface Media {
     vote_count: number;
     crew: CrewMember[];
   }
-  
+
+  export interface SelectedEpisode {
+    seasonNumber: number;
+    episodeNumber: number;
+    seasonId: number;
+    episodeId: number;
+  }
+
   export interface VideoData {
     id: string;
     key: string;

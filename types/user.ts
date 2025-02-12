@@ -10,10 +10,18 @@ export interface AuthState {
   isAuthenticated: boolean;
 }
 
+export interface AuthFormData {
+  email: string;
+  password: string;
+  confirmPassword?: string;
+  rememberMe?: boolean;
+  agreeToTerms?: boolean;
+}
+
 // Basic User Data (from Firebase Auth)
 export interface UserData {
   username: string;
-  email?: string; // Make email optional
+  email?: string; 
   createdAt?: Date;
   updatedAt?: Date;
   setupCompleted?: boolean;
@@ -47,7 +55,7 @@ export interface FriendRequest {
   fromUid: string;
   fromUsername: string;
   status: 'pending' | 'accepted' | 'rejected';
-  timestamp: string; // Keep as string, as Firebase timestamps are strings
+  timestamp: string; 
 }
 
 export interface UserFriends {
@@ -58,13 +66,13 @@ export interface UserFriends {
 }
 
 // Search-related types
-export interface SearchResult {
+export interface FriendSearchResult {
   uid: string;
   username: string;
   email?: string;
 }
 
-export interface SearchResultWithStatus extends SearchResult {
+export interface FriendSearchResultWithStatus extends FriendSearchResult {
   requestStatus?: {
     exists: boolean;
     type?: 'sent' | 'received';

@@ -38,22 +38,26 @@ export async function GET(request: NextRequest) {
 
     // Check request status for each user
     const usersWithStatus = await Promise.all(users.map(async (user) => {
-      const requestStatus = {
+      const requestStatus: {
+        exists: boolean;
+        type?: 'sent' | 'received';
+        status?: 'pending' | 'accepted' | 'rejected';
+      } = {
         exists: false,
-        type: undefined as 'sent' | 'received' | undefined,
-        status: undefined as 'pending' | 'accepted' | 'rejected' | undefined
+        type: undefined,
+        status: undefined
       };
-
-      if (friendsData.sentRequests?.[user.uid]) {
-        requestStatus.exists = true;
-        requestStatus.type = 'sent';
-        requestStatus.status = 'pending';
-      }
-
-      if (friendsData.receivedRequests?.[user.uid]) {
-        requestStatus.exists = true;
-        requestStatus.type = 'received';
-        requestStatus.status = 'pending';
+        // Check if the current user has sent a request to this user
+        if (friendsData.sentRequests && friendsData.sentRequests[user.uid]) {
+            requestStatus.exists = true;
+            requestStatus.type = 'sent';
+            requestStatus.status = 'pending';
+        }
+        //Check if the current user has received a request from this user.
+        if (friendsData.receivedRequests && friendsData.receivedRequests[user.uid]) {
+          requestStatus.exists = true;
+          requestStatus.type = 'received';
+          requestStatus.status = 'pending';
       }
 
       return {

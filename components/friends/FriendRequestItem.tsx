@@ -1,14 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { UserRound, Loader2, Check, X } from 'lucide-react';
-
-export interface FriendRequest {
-  id: string;
-  fromUid: string;
-  fromUsername: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  timestamp: string;
-}
+import { FriendRequest } from '@/types';
 
 interface FriendRequestItemProps {
   request: FriendRequest;

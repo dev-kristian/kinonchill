@@ -1,3 +1,4 @@
+// context/SessionContext.tsx
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuthContext } from './AuthContext';
 import { useUserData } from './UserDataContext';
@@ -13,23 +14,9 @@ import {
   Timestamp,
   getDoc, 
   deleteField,
-  onSnapshot  // Add this import
+  onSnapshot 
 } from 'firebase/firestore';
-import { DateTimeSelection, Session } from '@/types';
-
-interface SessionContextType {
-  createSession: (dates: DateTimeSelection[]) => Promise<Session>;
-  createPoll: (sessionId: string, movieTitles: string[]) => Promise<void>;
-  updateUserDates: (sessionId: string, dates: DateTimeSelection[]) => Promise<void>;
-  toggleVote: (sessionId: string, movieTitle: string) => Promise<void>;
-  addMovieToPoll: (sessionId: string, movieTitle: string) => Promise<void>;
-  removeMovieFromPoll: (sessionId: string, movieTitle: string) => Promise<void>;
-  sessions: Session[];
-}
-interface UserDate {
-  date: Timestamp;
-  hours: 'all' | Timestamp[];
-}
+import { DateTimeSelection, Session, SessionContextType, UserDate  } from '@/types';
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
@@ -52,7 +39,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const sessionsRef = collection(db, 'sessions');
       const newSessionRef = doc(sessionsRef);
       
-      // Use temporary date for initial client-side creation
       const tempDate = new Date();
   
       await setDoc(newSessionRef, {
@@ -71,7 +57,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         status: 'active'
       });
   
-      // Return session with temporary date, will be updated by real-time listener
       return {
         id: newSessionRef.id,
         createdAt: tempDate,
@@ -94,7 +79,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [user, userData]);
 
-  // Real-time listener to update sessions
   useEffect(() => {
     if (!user || !userData) return;
 
@@ -105,10 +89,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const sessionsList: Session[] = querySnapshot.docs.map(doc => {
         const data = doc.data();
         
-        // Add null checks for createdAt
         const createdAt = data.createdAt?.toDate() || new Date();
       
-        // Safely handle userDates with optional chaining
         const userDates = Object.entries(data.userDates || {}).map(([username, dates]) => {
           const userDates = (dates as UserDate[]).map(({ date, hours }) => {
             const dateISO = date?.toDate()?.toISOString() || new Date().toISOString();
@@ -138,11 +120,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         };
       });
 
-      // Update the session state with the real-time snapshot data
       setSessions(sessionsList);
     });
 
-    // Clean up the listener when the component is unmounted
     return () => {
       unsubscribe();
     };
