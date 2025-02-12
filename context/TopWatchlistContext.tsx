@@ -2,10 +2,10 @@
 'use client'
 
 import React, { createContext, useState, useContext, useCallback, useEffect, useRef } from 'react';
-import { doc, getDoc ,DocumentData} from 'firebase/firestore';
+import { doc, getDoc, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { TopWatchlistItem } from '@/types/types';
-
+import { TopWatchlistItem } from '@/types';
+import { useUserData } from './UserDataContext';
 
 interface TopWatchlistContextType {
   topWatchlistItems: {
@@ -19,7 +19,6 @@ interface TopWatchlistContextType {
   isLoading: boolean;
   error: string | null;
   fetchTopWatchlistItems: (mediaType: 'movie' | 'tv') => Promise<void>;
-  getWatchlistCount: (id: number, mediaType: 'movie' | 'tv') => Promise<number>;
 }
 
 const TopWatchlistContext = createContext<TopWatchlistContextType | undefined>(undefined);
@@ -32,6 +31,17 @@ export const useTopWatchlist = () => {
   return context;
 };
 
+interface FirestoreWatchlistItem {
+  id: number;
+  media_type: 'movie' | 'tv';
+  poster_path?: string;
+  release_date?: string;
+  title?: string;
+  vote_average?: number;
+  [key: string]: any; // To allow other potential fields from Firestore
+}
+
+
 export const TopWatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [topWatchlistItems, setTopWatchlistItems] = useState<{ movie: TopWatchlistItem[]; tv: TopWatchlistItem[] }>({
     movie: [],
@@ -41,84 +51,113 @@ export const TopWatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [error, setError] = useState<string | null>(null);
   const [isFetching, setIsFetching] = useState({ movie: false, tv: false });
   const topWatchlistItemsRef = useRef(topWatchlistItems);
+  const { userData, friends, isLoadingFriends, isLoadingRequests } = useUserData();
 
   useEffect(() => {
     topWatchlistItemsRef.current = topWatchlistItems;
   }, [topWatchlistItems]);
 
-  const fetchTopWatchlistItems = useCallback(async (mediaType: 'movie' | 'tv') => {
-    if (topWatchlistItemsRef.current[mediaType].length > 0 || isFetching[mediaType]) return;
-  
-    setIsFetching(prev => ({ ...prev, [mediaType]: true }));
+  // No need for getWatchlistCount anymore
+
+  const fetchTopWatchlistItemsForUser = useCallback(async (userId: string, mediaType: 'movie' | 'tv'): Promise<FirestoreWatchlistItem[]> => { // Changed return type
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      const docRef = doc(db, mediaType === 'movie' ? 'movies' : 'tvShows', 'allItems');
+      const docRef = doc(db, 'watchlists', userId);
       const docSnap = await getDoc(docRef);
-  
+
       if (docSnap.exists()) {
         const data = docSnap.data();
-        const items = Object.values(data)
-          .filter((item: DocumentData) => 
-            item.media_type === mediaType && 
-            item.vote_average > 0 && 
-            item.watchlist_count > 0
-          )
-          .map((item: DocumentData) => ({
-            ...item,
-            weighted_score: (item.vote_average * 1.3) + item.watchlist_count
-          }));
-  
-        // Sort items by weighted score
-        items.sort((a, b) => b.weighted_score - a.weighted_score);
-  
-        // Limit to 20 items
-        const limitedItems = items.slice(0, 20) as TopWatchlistItem[];
-  
-        setTopWatchlistItems(prev => ({ ...prev, [mediaType]: limitedItems }));
+        return (data[mediaType] || []) as FirestoreWatchlistItem[]; // Return raw Firestore items
       } else {
-        console.log("No such document!");
+        return [];
       }
     } catch (error) {
-      console.error('Error fetching topWatchlist items:', error);
-      setError('Failed to fetch topWatchlist items');
+      console.error(`Error fetching topWatchlist items for user ${userId}:`, error);
+      return [];
+    }
+  }, []);
+
+
+  const fetchTopWatchlistItems = useCallback(async (mediaType: 'movie' | 'tv') => {
+    if (topWatchlistItemsRef.current[mediaType].length > 0 || isFetching[mediaType]) {
+      return;
+    }
+
+    setIsFetching(prev => ({ ...prev, [mediaType]: true }));
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const watchlistCounts: { [id: number]: number } = {}; // Store counts here
+      let allUserItems: FirestoreWatchlistItem[] = [];  // Use FirestoreWatchlistItem
+
+      if (userData?.uid) {
+        const userItems = await fetchTopWatchlistItemsForUser(userData.uid, mediaType);
+        allUserItems = [...allUserItems, ...userItems];
+      }
+
+      if (friends) {
+        const friendsItemsPromises = friends.map(friend => fetchTopWatchlistItemsForUser(friend.uid, mediaType));
+        const friendsItemsResults = await Promise.all(friendsItemsPromises);
+        friendsItemsResults.forEach(items => {
+          allUserItems = [...allUserItems, ...items];
+        });
+      }
+
+      // Count occurrences *and* filter invalid data
+      const filteredAndCountedItems: TopWatchlistItem[] = [];
+      allUserItems.forEach(item => {
+        if (item.media_type === mediaType && item.vote_average !== undefined && item.vote_average > 0) {
+          watchlistCounts[item.id] = (watchlistCounts[item.id] || 0) + 1;
+
+          // Check if item already exists before pushing
+          if (!filteredAndCountedItems.find(existingItem => existingItem.id === item.id)) {
+            filteredAndCountedItems.push({
+              ...item,
+              weighted_score: item.vote_average
+            });
+          }
+        }
+      });
+
+      // Sort by vote_average (descending)
+      filteredAndCountedItems.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+
+      // Apply watchlist_count and limit to top 20
+      const topItems: TopWatchlistItem[] = filteredAndCountedItems.slice(0, 20).map(item => ({
+        ...item,
+        watchlist_count: watchlistCounts[item.id],
+      }));
+
+      setTopWatchlistItems(prev => ({ ...prev, [mediaType]: topItems }));
+
+    } catch (error) {
+      console.error('Error fetching aggregated topWatchlist items:', error);
+      setError(`Failed to fetch topWatchlist items: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
       setIsFetching(prev => ({ ...prev, [mediaType]: false }));
     }
-  }, [isFetching]);
-  useEffect(() => {
-    if (topWatchlistItems.movie.length === 0) {
-      fetchTopWatchlistItems('movie');
-    }
-    if (topWatchlistItems.tv.length === 0) {
-      fetchTopWatchlistItems('tv');
-    }
-  }, [fetchTopWatchlistItems, topWatchlistItems.movie.length, topWatchlistItems.tv.length]);
+  }, [userData?.uid, friends, fetchTopWatchlistItemsForUser, isFetching]);  // Simplified dependencies
 
-  const getWatchlistCount = useCallback(async (id: number, mediaType: 'movie' | 'tv') => {
-    try {
-      const docRef = doc(db, mediaType === 'movie' ? 'movies' : 'tvShows', id.toString());
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        return docSnap.data().watchlist_count || 0;
+
+  useEffect(() => {
+    if (userData && !isLoading && !isLoadingFriends && !isLoadingRequests) {
+      if (topWatchlistItems.movie.length === 0 && !isFetching.movie) {
+        fetchTopWatchlistItems('movie');
       }
-      return 0;
-    } catch (error) {
-      console.error('Error fetching watchlist count:', error);
-      return 0;
+      if (topWatchlistItems.tv.length === 0 && !isFetching.tv) {
+        fetchTopWatchlistItems('tv');
+      }
     }
-  }, []);
+  }, [fetchTopWatchlistItems, topWatchlistItems.movie.length, topWatchlistItems.tv.length, isLoading, userData, isFetching.movie, isFetching.tv, isLoadingFriends, isLoadingRequests, friends]);
 
   return (
-    <TopWatchlistContext.Provider value={{ 
-      topWatchlistItems, 
-      setTopWatchlistItems, 
-      isLoading, 
-      error, 
+    <TopWatchlistContext.Provider value={{
+      topWatchlistItems,
+      setTopWatchlistItems,
+      isLoading,
+      error,
       fetchTopWatchlistItems,
-      getWatchlistCount
     }}>
       {children}
     </TopWatchlistContext.Provider>

@@ -2,17 +2,16 @@ import React, { useState, useRef, useCallback, useMemo, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { useToast } from "@/hooks/use-toast";
+import { useCustomToast } from '@/hooks/useToast';
 import { useUserData } from '@/context/UserDataContext';
 import { useSession } from '@/context/SessionContext';
 import { useSendInvitation } from '@/hooks/useSendInvitation';
 import MovieNightCalendar from './MovieNightCalendar';
-import { DateTimeSelection } from '@/types/types';
+import { DateTimeSelection,TopWatchlistItem } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiCalendar, FiFilm, FiSend, FiX } from 'react-icons/fi';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTopWatchlist } from '@/context/TopWatchlistContext';
-import { TopWatchlistItem } from '@/types/types';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
@@ -82,7 +81,7 @@ SelectedMovieItem.displayName = "SelectedMovieItem";
 
 export default function MovieNightInvitation() {
   const router = useRouter();
-  const { toast } = useToast();
+  const { showToast } = useCustomToast();
   const { userData, isLoading: userLoading } = useUserData();
   const { createSession, createPoll } = useSession();
   const { sendInvitation, error: invitationError } = useSendInvitation();
@@ -107,11 +106,7 @@ export default function MovieNightInvitation() {
 
   const completeSession = useCallback(async () => {
     if (userLoading || !userData) {
-      toast({
-        title: "Error",
-        description: "User data not available. Please try again.",
-        variant: "destructive",
-      });
+      showToast("Error","User data not available. Please try again.","error",);
       return;
     }
 
@@ -127,10 +122,7 @@ export default function MovieNightInvitation() {
         if (invitationError) throw new Error(invitationError);
       }
 
-      toast({
-        title: "Session Created",
-        description: "Your movie night session has been created successfully!",
-      });
+      showToast("Session Created","Your movie night session has been created successfully!","success");
 
       setShowCalendar(false);
       setSelectedDates([]);
@@ -139,14 +131,10 @@ export default function MovieNightInvitation() {
 
     } catch (error) {
       console.error('Error completing session:', error);
-      toast({
-        title: "Error",
-        description: "Failed to complete the session. Please try again.",
-        variant: "destructive",
-      });
+      showToast("Error","Failed to complete the session. Please try again.","error",);
     }
   }, [userLoading, userData, selectedDates, movieTitles, sendNotification, 
-      toast, createSession, createPoll, sendInvitation, invitationError, router]);
+    showToast, createSession, createPoll, sendInvitation, invitationError, router]);
 
   const handleAddMovie = useCallback(() => {
     handleAddMovieTitle(inputMovieTitle, movieTitles, setMovieTitles, setInputMovieTitle);

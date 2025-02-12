@@ -1,4 +1,4 @@
-import { TopWatchlistItem } from "@/types/types";
+import { TopWatchlistItem } from "@/types";
 import { RefObject, useEffect } from "react";
 
 export function handleAddMovieTitle(

@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { format, addMonths, subMonths, isSameDay, parseISO, isBefore, startOfDay } from 'date-fns';
-import { DatePopularity, DateTimeSelection } from '@/types/types';
+import { DatePopularity, DateTimeSelection } from '@/types';
 
 interface MovieNightCalendarProps {
   selectedDates: DateTimeSelection[];

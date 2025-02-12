@@ -7,7 +7,7 @@ import { useUserData } from '@/context/UserDataContext';
 import { format, differenceInDays } from 'date-fns';
 import MovieNightCalendar from '@/components/home/MovieNightCalendar';
 import MoviePoll from '@/components/home/MoviePoll';
-import { DatePopularity, DateTimeSelection } from '@/types/types';
+import { DatePopularity, DateTimeSelection } from '@/types';
 import { calculateDatePopularity } from '@/utils/datePopularityCalculator';
 import { Users, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

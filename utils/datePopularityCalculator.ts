@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { DatePopularity } from '@/types/types';
+import { DatePopularity } from '@/types';
 
 export const calculateDatePopularity = (userDates: { [username: string]: { date: string, hours: string[] | 'all' }[] }): DatePopularity[] => {
   const popularity: { [key: string]: DatePopularity } = {};

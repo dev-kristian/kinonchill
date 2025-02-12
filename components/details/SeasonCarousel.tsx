@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import FlickyEmbed from '@/components/details/HostEmbed';
-import { Season, SeasonDetails } from '@/types/types';
+import { Season, SeasonDetails } from '@/types';
 
 interface SeasonCarouselProps {
   seasons: Season[];

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useUserData } from '@/context/UserDataContext';
-import { Media } from '@/types/types';
+import { Media } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,11 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from '@/hooks/use-toast';
+import { useCustomToast } from '@/hooks/useToast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 const UserWatchlist: React.FC = () => {
   const { watchlistItems, isLoading, removeFromWatchlist } = useUserData();
+  const {showToast} = useCustomToast();
   const [mediaType, setMediaType] = useState<'movie' | 'tv'>('movie');
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -124,11 +125,7 @@ const UserWatchlist: React.FC = () => {
 
   const handleRemoveWithToast = async (id: number, title: string) => {
     await removeFromWatchlist(id, mediaType);
-    toast({
-      title: "Removed from watchlist",
-      description: `${title} has been removed from your watchlist.`,
-      duration: 3000,
-    });
+    showToast("Removed from watchlist",`${title} has been removed from your watchlist.`,'success');
   };
 
   return (

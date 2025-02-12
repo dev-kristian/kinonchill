@@ -19,8 +19,8 @@ function RootLayout({
   children: React.ReactNode
 }) {
   return (
+    <UserDataProvider>
     <TopWatchlistProvider>
-      <UserDataProvider>
         <SearchProvider>
           <TrendingProvider>
             <SessionProvider>
@@ -43,8 +43,9 @@ function RootLayout({
             </SessionProvider>
           </TrendingProvider>
         </SearchProvider>
-      </UserDataProvider>
     </TopWatchlistProvider>
+    </UserDataProvider>
+
   )
 }
 

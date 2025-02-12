@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MoviePoster from '@/components/MediaPoster';
-import { Media } from '@/types/types';
+import { Media } from '@/types';
 
 interface SearchResultsContentProps {
   results: Media[];

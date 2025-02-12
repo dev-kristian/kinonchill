@@ -4,7 +4,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Bell, AlertTriangle, Info, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { NotificationSubscriptionUIProps } from '@/types/types';
+import { NotificationSubscriptionUIProps } from '@/types';
 
 const NotificationSubscriptionUI: React.FC<NotificationSubscriptionUIProps> = ({
   isSupported,

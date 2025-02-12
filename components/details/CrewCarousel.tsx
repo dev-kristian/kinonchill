@@ -4,7 +4,7 @@ import React, { useMemo, useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Spinner from '../Spinner';
-import { CrewMember } from '@/types/types';
+import { CrewMember } from '@/types';
 
 interface CrewCarouselProps {
   cast: CrewMember[];

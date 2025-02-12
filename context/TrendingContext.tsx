@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { useTopWatchlist } from '@/context/TopWatchlistContext';
-import { Media } from '@/types/types';
+import { Media } from '@/types';
 
 interface MediaState {
   data: Media[];
@@ -46,7 +46,6 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     hasMore: true,
   });
 
-  const { getWatchlistCount } = useTopWatchlist();
 
   const fetchData = useCallback(async (
     endpoint: string,
@@ -77,7 +76,6 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const resultsWithWatchlistCounts = await Promise.all(
         data.results.map(async (item: Media) => ({
           ...item,
-          watchlist_count: await getWatchlistCount(item.id, item.media_type || 'movie'),
         }))
       );
 
@@ -111,7 +109,7 @@ export const TrendingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isLoading: false,
       }));
     }
-  }, [getWatchlistCount, trendingState.page]);
+  }, [ trendingState.page]);
 
   const fetchTrending = useCallback((resetPage: boolean = false) => 
     fetchData('trending', setTrendingState, { mediaType, timeWindow }, resetPage),

@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useUserData } from '@/context/UserDataContext';
-import { Media } from '@/types/types';
+import { Media } from '@/types';
 import { BookmarkPlus, BookmarkMinus, Users } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 

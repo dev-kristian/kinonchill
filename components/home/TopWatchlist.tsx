@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTopWatchlist } from '@/context/TopWatchlistContext';
-import { TopWatchlistItem } from '@/types/types';
+import { TopWatchlistItem } from '@/types/';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const TopWatchlist: React.FC = () => {
-  const { topWatchlistItems, isLoading, error } = useTopWatchlist();
+  const { topWatchlistItems, isLoading, error } = useTopWatchlist(); 
   const [mediaType, setMediaType] = useState<'movie' | 'tv'>('movie');
 
   const items: TopWatchlistItem[] = topWatchlistItems[mediaType].slice(0, 5);
@@ -92,7 +92,8 @@ const TopWatchlist: React.FC = () => {
                   <div className="flex items-center space-x-2 mt-1 text-xs">
                     <span className="flex items-center text-gray-300">
                       <Users size={10} className="mr-1" />
-                      {item.watchlist_count || 'N/A'}
+                      {/* Use watchlist_count directly, no need for N/A handling */}
+                      {item.watchlist_count}
                     </span>
                     <span className="flex items-center text-yellow-400">
                       <Star size={10} className="mr-1" />

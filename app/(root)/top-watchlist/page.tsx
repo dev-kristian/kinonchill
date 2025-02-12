@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTopWatchlist } from '@/context/TopWatchlistContext';
-import { TopWatchlistItem } from '@/types/types';
+import { TopWatchlistItem } from '@/types';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';

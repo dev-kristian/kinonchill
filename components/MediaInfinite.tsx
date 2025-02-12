@@ -3,7 +3,7 @@ import MediaPoster from './MediaPoster';
 import Spinner from './Spinner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Media } from '@/types/types';
+import { Media } from '@/types';
 
 interface MediaInfiniteProps {
   title?: string;

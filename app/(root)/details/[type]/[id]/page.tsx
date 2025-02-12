@@ -2,9 +2,8 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import CrewCarousel from '@/components/details/CrewCarousel';
-import { DetailsData } from '@/types/types';
+import { DetailsData, VideoData } from '@/types';
 import DetailPageWrapper from '@/components/details/DetailPageWrapper';
-import { VideoData } from '@/types/types';
 import SeasonCarousel from '@/components/details/SeasonCarousel';
 
 interface DetailPageProps {

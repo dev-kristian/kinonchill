@@ -15,7 +15,7 @@ import {
   deleteField,
   onSnapshot  // Add this import
 } from 'firebase/firestore';
-import { DateTimeSelection, Session } from '@/types/types';
+import { DateTimeSelection, Session } from '@/types';
 
 interface SessionContextType {
   createSession: (dates: DateTimeSelection[]) => Promise<Session>;

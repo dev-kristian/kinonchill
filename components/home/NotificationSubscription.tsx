@@ -1,19 +1,19 @@
 // components/NotificationSubscription.tsx
 
 import React, { useEffect, useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useCustomToast } from '@/hooks/useToast';
 import { useUserData } from '@/context/UserDataContext';
 import { requestForToken, onMessageListener } from '@/lib/firebaseMessaging';
 import NotificationSubscriptionUI from './NotificationSubscriptionUI';
-import { NotificationPayload } from '@/types/types'; 
-import { NotificationStatus } from '@/types/types';
+import { NotificationPayload } from '@/types';
+import { NotificationStatus } from '@/types';
 
 const NotificationSubscription = () => {
   const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const [isIOS166OrHigher, setIsIOS166OrHigher] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const { toast } = useToast();
-  const { userData, updateNotificationStatus } = useUserData()
+  const { showToast } = useCustomToast();
+  const { userData, updateNotificationStatus } = useUserData();
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
@@ -56,92 +56,92 @@ const NotificationSubscription = () => {
       const setupMessaging = async () => {
         const unsubscribe = await onMessageListener((payload: NotificationPayload) => {
           console.log('New foreground notification:', payload);
-          toast({
-            title: payload?.notification?.title || "New Notification",
-            description: payload?.notification?.body,
-            variant: "default",
-          });
+          showToast(
+            payload?.notification?.title || "New Notification",
+            payload?.notification?.body || "You have a new notification.", // Added a default body
+            "default",
+          );
         });
-  
+
         return () => {
           if (unsubscribe && typeof unsubscribe === 'function') {
             unsubscribe();
           }
         };
       };
-  
+
       setupMessaging();
     }
-  }, [isSupported, toast]);
+  }, [isSupported, showToast]); // Corrected dependency array
 
   const handleUpdateNotificationStatus = async (status: NotificationStatus) => {
     try {
       await updateNotificationStatus(status);
-    } catch (error) {
+    } catch (error: any) { // Type error as any
       console.error("Error updating notification status:", error);
-      toast({
-        title: "Error Updating Status",
-        description: "Failed to update notification status. Please try again.",
-        variant: "destructive",
-      });
+      showToast(
+        "Error Updating Status",
+        error.message || "Failed to update notification status. Please try again.",
+        "error",
+      );
     }
   };
-  
+
   const handleSubscribe = async () => {
     if (!isSupported) {
-      toast({
-        title: "Notifications Not Supported",
-        description: "Push notifications are not available on this device or browser.",
-        variant: "destructive",
-      });
+      showToast(
+        "Notifications Not Supported",
+        "Push notifications are not available on this device or browser.",
+        "warning",
+      );
       await handleUpdateNotificationStatus("unsupported");
       return;
     }
-  
+
     if ('Notification' in window) {
-    const permission = await window.Notification.requestPermission();
-    if (permission === "granted") {
-      console.log("Notification permission granted. Requesting for token.");
-      const token = await requestForToken();
-      if (token) {
-        try {
-          await fetch('/api/subscribe-to-topic', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token }),
-          });
-          await handleUpdateNotificationStatus("allowed");
-          toast({
-            title: "Notifications Enabled",
-            description: "You'll now receive updates from Kino & Cill!",
-            variant: "default",
-          });
-        } catch (error) {
-          console.error("Error enabling notifications:", error);
-          toast({
-            title: "Subscription Error",
-            description: "Failed to enable notifications. Please try again later.",
-            variant: "destructive",
-          });
+      const permission = await window.Notification.requestPermission();
+      if (permission === "granted") {
+        console.log("Notification permission granted. Requesting for token.");
+        const token = await requestForToken();
+        if (token) {
+          try {
+            await fetch('/api/subscribe-to-topic', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ token }),
+            });
+            await handleUpdateNotificationStatus("allowed");
+            showToast(
+              "Notifications Enabled",
+              "You'll now receive updates from Kino & Cill!",
+              "default",
+            );
+          } catch (error: any) { // Type error as any
+            console.error("Error enabling notifications:", error);
+            showToast(
+              "Subscription Error",
+              error.message || "Failed to enable notifications. Please try again later.",
+              "error",
+            );
+          }
         }
-      }
-    } else {
+      } else {
         await handleUpdateNotificationStatus("denied");
-        toast({
-          title: "Permission Denied",
-          description: "Please allow notifications in your browser settings to receive updates.",
-          variant: "destructive",
-        });
+        showToast(
+          "Permission Denied",
+          "Please allow notifications in your browser settings to receive updates.",
+          "warning",
+        );
       }
     } else {
       await handleUpdateNotificationStatus("unsupported");
-      toast({
-        title: "Notifications Not Supported",
-        description: "Your browser doesn't support push notifications.",
-        variant: "destructive",
-      });
+      showToast(
+        "Notifications Not Supported",
+        "Your browser doesn't support push notifications.",
+        "warning",
+      );
     }
   };
 

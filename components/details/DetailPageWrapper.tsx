@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { DetailsData, VideoData } from '@/types/types';
+import { DetailsData, VideoData } from '@/types';
 import { format } from 'date-fns';
 import { useUserData } from '@/context/UserDataContext';
 import YouTubeEmbed from './YoutubeEmbed';

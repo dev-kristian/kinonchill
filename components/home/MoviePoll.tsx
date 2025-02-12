@@ -13,7 +13,7 @@ import {
 } from '@/utils/movieNightInvitationUtils';
 import { useSession } from '@/context/SessionContext';
 import { useUserData } from '@/context/UserDataContext';
-import { TopWatchlistItem, Session, Poll } from '@/types/types';
+import { TopWatchlistItem, Session, Poll } from '@/types';
 import Link from 'next/link';
 
 interface MoviePollProps {

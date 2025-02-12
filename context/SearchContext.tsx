@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Media } from '@/types/types';
+import { Media } from '@/types';
 
 export interface SearchResult extends Media {
   overview: string;
