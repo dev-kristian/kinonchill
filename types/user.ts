@@ -98,4 +98,5 @@ export interface NotificationSubscriptionUIProps {
   setShowDetails: (show: boolean) => void;
   handleUpdateNotificationStatus: (status: NotificationStatus) => Promise<void>;
   handleSubscribe: () => Promise<void>;
+  handleDismiss: () => void; 
 }

@@ -4,7 +4,18 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Bell, AlertTriangle, Info, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { NotificationSubscriptionUIProps } from '@/types';
+
+interface NotificationSubscriptionUIProps {
+  isSupported: boolean | null;
+  isIOS166OrHigher: boolean;
+  isStandalone: boolean;
+  userData: any; 
+  showDetails: boolean;
+  setShowDetails: (show: boolean) => void;
+  handleUpdateNotificationStatus: (status: "allowed" | "denied" | "unsupported") => Promise<void>;
+  handleSubscribe: () => Promise<void>;
+  handleDismiss: () => void;
+}
 
 const NotificationSubscriptionUI: React.FC<NotificationSubscriptionUIProps> = ({
   isSupported,
@@ -15,6 +26,7 @@ const NotificationSubscriptionUI: React.FC<NotificationSubscriptionUIProps> = ({
   setShowDetails,
   handleUpdateNotificationStatus,
   handleSubscribe,
+  handleDismiss,
 }) => {
   const fadeIn = {
     hidden: { opacity: 0 },
@@ -26,27 +38,42 @@ const NotificationSubscriptionUI: React.FC<NotificationSubscriptionUIProps> = ({
       return null;
     }
 
+    const dismissButton = (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleDismiss}
+        className="hover:bg-gray-700/50 rounded-full h-8 w-8 flex items-center justify-center"
+        aria-label="Dismiss notification"
+      >
+        <span className="text-gray-400 hover:text-white text-lg">×</span>
+      </Button>
+    );
+
     if (isSupported === false) {
       return (
         <motion.div 
-          className="bg-gray-900 border border-gray-800 rounded-lg p-4 shadow-lg w-full"
+          className="bg-gray-900 border border-gray-800 rounded-lg p-4 shadow-lg w-full relative"
           initial="hidden"
           animate="visible"
           variants={fadeIn}
         >
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center">
               <AlertTriangle className="text-yellow-500 mr-2" size={20} />
               <h2 className="text-lg font-semibold text-white">Notifications Not Supported</h2>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setShowDetails(!showDetails)}
-              className="text-gray-400 hover:text-white"
-            >
-              {showDetails ? 'Hide Details' : 'Show Details'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowDetails(!showDetails)}
+                className="text-gray-400 hover:text-white"
+              >
+                {showDetails ? 'Hide Details' : 'Show Details'}
+              </Button>
+              {dismissButton}
+            </div>
           </div>
           <p className="text-gray-300 text-sm mb-3">Your current device or browser doesn&apos;t support push notifications.</p>
           {showDetails && (
@@ -73,24 +100,27 @@ const NotificationSubscriptionUI: React.FC<NotificationSubscriptionUIProps> = ({
     if (isIOS166OrHigher && !isStandalone) {
       return (
         <motion.div 
-          className="bg-gray-900 border border-gray-800 rounded-lg p-4 shadow-lg w-full"
+          className="bg-gray-900 border border-gray-800 rounded-lg p-4 shadow-lg w-full relative"
           initial="hidden"
           animate="visible"
           variants={fadeIn}
         >
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Info className="text-blue-400 mr-2" size={20} />
               <h2 className="text-lg font-semibold text-white">Enable Notifications</h2>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setShowDetails(!showDetails)}
-              className="text-gray-400 hover:text-white"
-            >
-              {showDetails ? 'Hide Steps' : 'Show Steps'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowDetails(!showDetails)}
+                className="text-gray-400 hover:text-white"
+              >
+                {showDetails ? 'Hide Steps' : 'Show Steps'}
+              </Button>
+              {dismissButton}
+            </div>
           </div>
           <p className="text-gray-300 text-sm mb-3">Add this page to your home screen to receive notifications.</p>
           {showDetails && (
@@ -108,24 +138,27 @@ const NotificationSubscriptionUI: React.FC<NotificationSubscriptionUIProps> = ({
     if (isSupported && (isStandalone || !isIOS166OrHigher)) {
       return (
         <motion.div 
-          className="bg-gray-900 border border-gray-800 rounded-lg p-2 shadow-lg w-full"
+          className="bg-gray-900 border border-gray-800 rounded-lg p-4 shadow-lg w-full relative"
           initial="hidden"
           animate="visible"
           variants={fadeIn}
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center ">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
               <Bell className="text-pink-500 mr-2" size={20} />
               <h2 className="text-lg font-semibold text-white">Enable Notifications</h2>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setShowDetails(!showDetails)}
-              className="text-gray-400 hover:text-white"
-            >
-              {showDetails ? 'Hide Details' : 'Show Details'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowDetails(!showDetails)}
+                className="text-gray-400 hover:text-white"
+              >
+                {showDetails ? 'Hide Details' : 'Show Details'}
+              </Button>
+              {dismissButton}
+            </div>
           </div>
           {showDetails && (
             <p className="text-gray-300 text-sm mb-3">Get instant updates on new releases, polls, and exclusive content!</p>

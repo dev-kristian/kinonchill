@@ -6,7 +6,7 @@ export interface Media {
     name?: string;
     poster_path?: string | null;
     profile_path?: string | null;
-    vote_average?: number;
+    vote_average: number;
     media_type?: 'movie' | 'tv';
     release_date?: string;
     first_air_date?: string;

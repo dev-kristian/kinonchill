@@ -41,7 +41,7 @@ const SuggestionItem = memo(({ movie, onClick }: {
     <span>{movie.title}</span>
   </li>
 ));
-SuggestionItem.displayName = "SuggestionItem"; // Add display name
+SuggestionItem.displayName = "SuggestionItem"; 
 
 const SelectedMovieItem = memo(({ 
   movie, 
@@ -86,17 +86,12 @@ export default function MovieNightInvitation() {
   const { createSession, createPoll } = useSession();
   const { sendInvitation, error: invitationError } = useSendInvitation();
   const [selectedDates, setSelectedDates] = useState<DateTimeSelection[]>([]);
-  const [showCalendar, setShowCalendar] = useState(false);
   const [sendNotification, setSendNotification] = useState(true);
   const [movieTitles, setMovieTitles] = useState<TopWatchlistItem[]>([]);
   const [inputMovieTitle, setInputMovieTitle] = useState('');
   const { topWatchlistItems } = useTopWatchlist();
   const [suggestions, setSuggestions] = useState<TopWatchlistItem[]>([]);
   const inputContainerRef = useRef<HTMLDivElement>(null);
-
-  const handleCreateSession = useCallback(() => {
-    setShowCalendar(true);
-  }, []);
 
   const handleDatesSelected = useCallback((dates: DateTimeSelection[]) => {
     setSelectedDates(dates);
@@ -124,7 +119,6 @@ export default function MovieNightInvitation() {
 
       showToast("Session Created","Your movie night session has been created successfully!","success");
 
-      setShowCalendar(false);
       setSelectedDates([]);
       setMovieTitles([]);
       router.push(`/sessions/${newSession.id}`);
@@ -135,7 +129,9 @@ export default function MovieNightInvitation() {
     }
   }, [userLoading, userData, selectedDates, movieTitles, sendNotification, 
     showToast, createSession, createPoll, sendInvitation, invitationError, router]);
-
+    const handleCancel = useCallback(() => {
+      router.push('/sessions');
+    }, [router]);
   const handleAddMovie = useCallback(() => {
     handleAddMovieTitle(inputMovieTitle, movieTitles, setMovieTitles, setInputMovieTitle);
   }, [inputMovieTitle, movieTitles]);
@@ -246,8 +242,8 @@ export default function MovieNightInvitation() {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button 
-                onClick={() => setShowCalendar(false)} 
+            <Button 
+                onClick={handleCancel}
                 className="py-6 text-lg font-semibold bg-transparent hover:bg-transparent text-white hover:text-primary/70 transition-all duration-300"
               >
                 Cancel
@@ -282,40 +278,13 @@ export default function MovieNightInvitation() {
 
     return (
       <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 rounded-3xl shadow-2xl mx-auto border border-white/10 backdrop-blur-lg">
-        {!showCalendar ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="text-center space-y-6 py-8 px-4"
-          >
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-                Plan Your Perfect Movie Night
-              </h2>
-              <p className="text-gray-300/90 text-lg mt-2">
-                Collaborate with friends, choose the best time, and pick movies together
-              </p>
-            </div>
-            
-            <Button 
-              onClick={handleCreateSession} 
-              className="group relative py-7 px-10 text-lg font-semibold rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30"
-            >
-              <FiCalendar className="mr-3 h-5 w-5 transition-transform group-hover:scale-110" />
-              Start New Session
-              <div className="absolute inset-0 rounded-xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </Button>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            {sessionCreationContent}
-          </motion.div>
-        )}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {sessionCreationContent}
+        </motion.div>
       </div>
     );
-}
+  }

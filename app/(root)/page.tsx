@@ -1,53 +1,64 @@
-//app\(root)\page.tsx
+// app/(root)/page.tsx
 "use client"
 
 import React from 'react';
-import AnimatedTitle from '@/components/AnimatedTitle';
-import TopWatchlist from '@/components/home/TopWatchlist';
+import { motion } from 'framer-motion';
 import { useUserData } from '@/context/UserDataContext';
 import NotificationSubscription from '@/components/home/NotificationSubscription';
-import MovieNightInvitation from '@/components/home/MovieNightInvitation';
-import UserWatchlist from '@/components/home/UserWatchList';
+import { Glass } from '@/components/ui/glass';
+import { WatchlistOverview } from '@/components/home/WatchlistOverview';
+import { CreateSession } from '@/components/home/CreateSession';
+import { TopWatchlistStats } from '@/components/home/TopWatchlistStats';
 
 export default function Home() {
   const { userData } = useUserData();
 
   return (
-    <div className="container-6xl mx-auto px-2 md:px-4 py-4">
-      <div className="mb-6">
-        {userData ? (
-          <AnimatedTitle>
-            {(className) => (
-              <>
-                <span className={className}>Welcome, </span>
-                <span className="text-primary/50">{userData.username}</span>
-                <span className={className}>&nbsp;!</span>
-              </>
-            )}
-          </AnimatedTitle>
-        ) : (
-          <AnimatedTitle>
-            {(className) => (
-              <span className={className}>Welcome to Kino & Cill!</span>
-            )}
-          </AnimatedTitle>
-        )}
+    <div className="min-h-screen w-full px-4 pt-12 pb-6 md:px-8 lg:px-12">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-[2000px] mx-auto space-y-8"
+      >
+        {/* Header Section */}
+        <header className="flex justify-between items-center">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-bold tracking-tight">
+              {userData ? (
+                <span>Welcome back, <span className="text-primary">{userData.username}</span></span>
+              ) : (
+                "Welcome to Kino & Chill"
+              )}
+            </h1>
+            <p className="text-gray-400">Discover, track, and watch together</p>
+          </div>
+          
+          {userData && userData.notification !== "unsupported" && (
+            <NotificationSubscription />
+          )}
+        </header>
 
-        {userData && userData.notification !== "unsupported" && (
-          <NotificationSubscription />
-        )}
-      </div>
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column - Create Session & Watchlist */}
+          <div className="lg:col-span-8 space-y-6">
+            <Glass className="p-6">
+              <CreateSession />
+            </Glass>
+            
+            <Glass className="p-6">
+              <WatchlistOverview />
+            </Glass>
+          </div>
 
-      <div className="flex flex-col lg:flex-row lg:space-x-2">
-        <div className="w-full lg:w-3/4 space-y-4">
-          <MovieNightInvitation />
-          <UserWatchlist />
+          {/* Right Column - Trending Content */}
+          <div className="lg:col-span-4">
+            <Glass className="p-6 h-full">
+              <TopWatchlistStats />
+            </Glass>
+          </div>
         </div>
-        
-        <div className="w-full lg:w-1/4">
-          <TopWatchlist />
-        </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+// components/Navigation.tsx
 'use client'
 
 import Link from 'next/link';
@@ -17,7 +18,8 @@ import {
   Menu,
   X,
   User as UserIcon,
-  Users // Import Users icon for Friends
+  Users,
+  Settings // Add Settings icon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -134,25 +136,38 @@ export default function Navigation() {
                 </motion.button>
 
                 <AnimatePresence>
-                  {isDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute right-0 p-2 w-48 bg-background border border-accent/10 rounded-lg shadow-lg py-1 overflow-hidden"
-                    >
-                      <button
-                        onClick={handleSignOut}
-                        className="flex items-center space-x-2 rounded-xl w-full px-4 py-2 text-left text-foreground/90 hover:bg-accent/5 transition-colors"
-                      >
-                        <LogOut className="h-5 w-5" />
-                        <span>Sign Out</span>
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
+              {isDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute right-0 p-2 w-48 bg-background border border-accent/10 rounded-lg shadow-lg py-1 overflow-hidden"
+                >
+                  {/* Add Settings Link */}
+                  <Link
+                    href="/settings"
+                    className="flex items-center space-x-2 rounded-xl w-full px-4 py-2 text-left text-foreground/90 hover:bg-accent/5 transition-colors"
+                    onClick={() => setIsDropdownOpen(false)}
+                  >
+                    <Settings className="h-5 w-5" />
+                    <span>Settings</span>
+                  </Link>
+                  
+                  {/* Divider */}
+                  <div className="my-1 border-t border-accent/10" />
+                  
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-2 rounded-xl w-full px-4 py-2 text-left text-foreground/90 hover:bg-accent/5 transition-colors"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span>Sign Out</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ) : (
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

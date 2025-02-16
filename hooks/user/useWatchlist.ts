@@ -1,8 +1,9 @@
+// hooks/user/useWatchlist.ts
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthContext } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { Media } from '@/types';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
+import { Media, FirestoreWatchlistItem } from '@/types';
 
 interface Watchlist {
   movie: Media[];
@@ -19,34 +20,39 @@ export const useWatchlist = (): UseWatchlistReturn => {
   const { user } = useAuthContext();
   const [watchlistItems, setWatchlistItems] = useState<Watchlist>({ movie: [], tv: [] });
 
-  // Reference to the user's watchlist document
-  const watchlistDocRef = user ? doc(db, 'watchlists', user.uid) : null;
-
-  // Fetch watchlist from Firestore
   useEffect(() => {
-    if (!watchlistDocRef) return;
+    if (!user) return;
 
-    const fetchWatchlist = async () => {
-      try {
-        const docSnap = await getDoc(watchlistDocRef);
+    const watchlistDocRef = doc(db, 'watchlists', user.uid);
+    
+    // Set up a single listener for real-time updates
+    const unsubscribe = onSnapshot(
+      watchlistDocRef,
+      (docSnap) => {
         if (docSnap.exists()) {
-          setWatchlistItems(docSnap.data() as Watchlist);
+          const data = docSnap.data();
+          setWatchlistItems({
+            movie: (data?.movie || []) as Media[],
+            tv: (data?.tv || []) as Media[]
+          });
         } else {
           setWatchlistItems({ movie: [], tv: [] });
         }
-      } catch (error) {
-        console.error('Error fetching watchlist:', error);
+      },
+      (error) => {
+        console.error('Error listening to watchlist:', error);
       }
-    };
+    );
 
-    fetchWatchlist();
+    // Cleanup listener on unmount or when user changes
+    return () => unsubscribe();
   }, [user]);
 
-  // Add item to watchlist
   const addToWatchlist = useCallback(
     async (item: Media, mediaType: 'movie' | 'tv') => {
-      if (!watchlistDocRef) return;
+      if (!user) return;
 
+      const watchlistDocRef = doc(db, 'watchlists', user.uid);
       try {
         await setDoc(
           watchlistDocRef,
@@ -55,36 +61,35 @@ export const useWatchlist = (): UseWatchlistReturn => {
           },
           { merge: true }
         );
-        setWatchlistItems((prev) => ({
-          ...prev,
-          [mediaType]: [...prev[mediaType], item],
-        }));
       } catch (error) {
         console.error(`Error adding ${mediaType} to watchlist:`, error);
       }
     },
-    [watchlistDocRef]
+    [user]
   );
 
-  // Remove item from watchlist
   const removeFromWatchlist = useCallback(
     async (id: number, mediaType: 'movie' | 'tv') => {
-      if (!watchlistDocRef) return;
+      if (!user) return;
 
+      const watchlistDocRef = doc(db, 'watchlists', user.uid);
       try {
-        const updatedItems = watchlistItems[mediaType].filter((item) => item.id !== id);
-        await updateDoc(watchlistDocRef, {
-          [mediaType]: updatedItems,
-        });
-        setWatchlistItems((prev) => ({
-          ...prev,
-          [mediaType]: updatedItems,
-        }));
+        const docSnap = await getDoc(watchlistDocRef);
+        if (docSnap.exists()) {
+          const currentData = docSnap.data() as Watchlist;
+          const itemToRemove = currentData[mediaType].find(item => item.id === id);
+
+          if (itemToRemove) {
+            await updateDoc(watchlistDocRef, {
+              [mediaType]: arrayRemove(itemToRemove),
+            });
+          }
+        }
       } catch (error) {
         console.error(`Error removing ${mediaType} from watchlist:`, error);
       }
     },
-    [watchlistDocRef, watchlistItems]
+    [user]
   );
 
   return { watchlistItems, addToWatchlist, removeFromWatchlist };

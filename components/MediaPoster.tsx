@@ -1,3 +1,4 @@
+// components/MediaPoster.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -13,23 +14,25 @@ interface MediaPosterProps {
   variant?: 'default' | 'compact';
 }
 
-const MediaPoster: React.FC<MediaPosterProps> = ({ 
-  media, 
+const MediaPoster: React.FC<MediaPosterProps> = ({
+  media,
   showMediaType = false,
   variant = 'default'
 }) => {
   const router = useRouter();
-  const { userData, isLoading: isUserDataLoading, addToWatchlist, removeFromWatchlist } = useUserData();
+  const { userData, isLoading: isUserDataLoading, addToWatchlist, removeFromWatchlist, watchlistItems } = useUserData();  // Destructure watchlistItems
   const [isLoading, setIsLoading] = useState(false);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
 
   const mediaType = media.media_type as 'movie' | 'tv';
 
-  useEffect(() => {
-    if (userData && userData.watchlist) {
-      setIsInWatchlist(!!userData.watchlist[mediaType]?.[media.id.toString()]);
-    }
-  }, [userData, mediaType, media.id]);
+    useEffect(() => {
+        if (watchlistItems && mediaType) {
+            const isItemInWatchlist = watchlistItems[mediaType]?.some(item => item.id === media.id);
+            setIsInWatchlist(isItemInWatchlist);
+        }
+    }, [watchlistItems, mediaType, media.id]);
+
 
   const handleToggleWatchlist = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -37,7 +40,7 @@ const MediaPoster: React.FC<MediaPosterProps> = ({
     try {
       if (isInWatchlist) {
         await removeFromWatchlist(media.id, mediaType);
-        setIsInWatchlist(false);
+        // setIsInWatchlist(false); // No longer needed, handled by useEffect
       } else {
         const mediaDetails = {
           id: media.id,
@@ -48,7 +51,7 @@ const MediaPoster: React.FC<MediaPosterProps> = ({
           media_type: mediaType,
         };
         await addToWatchlist(mediaDetails, mediaType);
-        setIsInWatchlist(true);
+        // setIsInWatchlist(true); // No longer needed, handled by useEffect
       }
     } catch (error) {
       console.error('Error updating watchlist status:', error);
@@ -76,7 +79,7 @@ const MediaPoster: React.FC<MediaPosterProps> = ({
   const renderContent = () => {
     if (variant === 'compact') {
       return (
-        <motion.div 
+        <motion.div
           className="relative rounded-lg overflow-hidden shadow-md cursor-pointer"
           whileHover={{ scale: 1.05 }}
           transition={{ duration: 0.2 }}
@@ -101,7 +104,7 @@ const MediaPoster: React.FC<MediaPosterProps> = ({
     }
 
     return (
-      <motion.div 
+      <motion.div
         className="relative rounded-xl overflow-hidden shadow-lg bg-background-light cursor-pointer"
         whileHover={{ scale: 1.03 }}
         transition={{ duration: 0.2 }}
@@ -123,7 +126,7 @@ const MediaPoster: React.FC<MediaPosterProps> = ({
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
-          
+
           <div className="absolute top-2 left-2 flex items-center space-x-2">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-sm`}>
               <span className={`text-sm font-bold ${getScoreColor}`}>
@@ -175,7 +178,7 @@ const MediaPoster: React.FC<MediaPosterProps> = ({
                 <TooltipContent>
                   {isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
                 </TooltipContent>
-                </Tooltip>
+              </Tooltip>
             </TooltipProvider>
           </div>
         </div>

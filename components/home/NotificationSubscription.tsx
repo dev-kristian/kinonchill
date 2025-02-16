@@ -15,6 +15,7 @@ const NotificationSubscription = () => {
   const { showToast } = useCustomToast();
   const { userData, updateNotificationStatus } = useUserData();
   const [showDetails, setShowDetails] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
     const checkSupport = () => {
@@ -144,6 +145,25 @@ const NotificationSubscription = () => {
       );
     }
   };
+  
+ const handleDismiss = () => {
+    setIsDismissed(true);
+    // Optionally save this preference to localStorage
+    localStorage.setItem('notificationsDismissed', 'true');
+  };
+
+  // Check for dismissed state on mount
+  useEffect(() => {
+    const dismissed = localStorage.getItem('notificationsDismissed');
+    if (dismissed === 'true') {
+      setIsDismissed(true);
+    }
+  }, []);
+
+  // If dismissed, don't render anything
+  if (isDismissed) {
+    return null;
+  }
 
   return (
     <NotificationSubscriptionUI
@@ -155,6 +175,7 @@ const NotificationSubscription = () => {
       setShowDetails={setShowDetails}
       handleUpdateNotificationStatus={handleUpdateNotificationStatus}
       handleSubscribe={handleSubscribe}
+      handleDismiss={handleDismiss} 
     />
   );
 };

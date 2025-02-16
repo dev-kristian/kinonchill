@@ -40,7 +40,6 @@ export function handleInputChange(
   setInputMovieTitle(value);
 
   if (value.length > 1) {
-    // Combine movies and TV shows
     const allSuggestions = [...topWatchlistItems.movie, ...topWatchlistItems.tv];
     const filteredSuggestions = allSuggestions
       .filter((item) => item.title?.toLowerCase().includes(value.toLowerCase()))
@@ -58,18 +57,15 @@ export function handleSuggestionClick(
     movieTitles: TopWatchlistItem[],
     setMovieTitles: React.Dispatch<React.SetStateAction<TopWatchlistItem[]>>,
     setSuggestions: React.Dispatch<React.SetStateAction<TopWatchlistItem[]>>,
-    addMovieToPoll?: (movieTitle: string) => Promise<void>  // make this parameter optional
+    addMovieToPoll?: (movieTitle: string) => Promise<void>  
   ) {
-    // Reset input and clear suggestions
     setInputMovieTitle('');
     setSuggestions([]);
   
-    // Handle adding the movie locally for MovieNightInvitation
     if (movieTitles && setMovieTitles) {
       setMovieTitles([...movieTitles, movie]);
     }
   
-    // If addMovieToPoll is provided, invoke it (MoviePoll scenario)
     if (addMovieToPoll && movie.title) {
       addMovieToPoll(movie.title).catch((error) => {
         console.error('Error adding movie to poll:', error);

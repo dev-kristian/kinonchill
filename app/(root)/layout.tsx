@@ -26,7 +26,7 @@ function RootLayout({
             <SessionProvider>
               <div className="flex flex-col min-h-screen">
                 <Navigation />
-                <main className=" py-12">
+                <main>
                   <Suspense fallback={
                     <div className="w-full h-full flex items-center justify-center ">
                       <Loading 

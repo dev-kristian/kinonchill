@@ -1,3 +1,4 @@
+//context\UserDataContext.tsx
 'use client';
 
 import React, { createContext, useContext } from 'react';
@@ -18,7 +19,7 @@ export const useUserData = () => {
 
 export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { userData, updateNotificationStatus } = useUserDataHook();
-  const { watchlistItems, addToWatchlist, removeFromWatchlist } = useWatchlist();
+  const { watchlistItems, addToWatchlist, removeFromWatchlist } = useWatchlist(); // Get watchlistItems
   const { friends, friendRequests, isLoadingFriends, isLoadingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend } =
     useFriends(userData?.username);
 
@@ -26,8 +27,8 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     <UserDataContext.Provider
       value={{
         userData,
-        isLoading: false,
-        watchlistItems,
+        isLoading: false, 
+        watchlistItems, 
         addToWatchlist,
         removeFromWatchlist,
         updateNotificationStatus,
